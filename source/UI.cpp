@@ -141,10 +141,10 @@ namespace UI
 		}
 		if (ImGuiMCP::IsItemHovered())
 		{
-			ImGuiMCP::SetTooltip("The start is spread over several frames on purpose - move, then pack, then each "
-								 "piece of the uniform, then the questline - so that a teleport and a full set of "
-								 "armour do not land in the same frame. Raise it if you see a hitch or a crash on "
-								 "arrival with body-physics mods installed. 0 puts it all back in one frame.");
+			ImGuiMCP::SetTooltip("The start is spread over several frames on purpose - arrive, then pack, then each "
+								 "piece of the uniform, then the questline. It is also how often the mod checks "
+								 "whether you have finished arriving: nothing is handed over until you are actually "
+								 "standing in the war room, however long the load takes. 0 puts it all in one frame.");
 		}
 
 		ImGuiMCP::Spacing();

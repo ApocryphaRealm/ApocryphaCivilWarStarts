@@ -24,6 +24,9 @@ namespace start
 		std::atomic<bool> g_installed{ false };
 		std::atomic<bool> g_chosen{ false };
 		std::atomic<bool> g_queued{ false };
+		// Where the move was aimed. Nothing is handed over until the player is actually THERE - the owner,
+		// 2026-09-16: "we should only get the items after teleporting".
+		RE::TESObjectCELL* g_destination = nullptr;
 
 		// Our quests' real FormIDs, filled in at kDataLoaded. Index matches starts::kSides.
 		std::array<RE::FormID, starts::kSideCount> g_questIDs{};
@@ -62,7 +65,17 @@ namespace start
 		{
 			if (!a_item.plugin) { return Vanilla<RE::TESBoundObject>(a_item.formID); }
 			auto* handler = RE::TESDataHandler::GetSingleton();
-			return handler ? handler->LookupForm<RE::TESBoundObject>(a_item.formID, a_item.plugin) : nullptr;
+			if (!handler) { return nullptr; }
+
+			// The UNTEMPLATED LookupForm, then As<>. TESDataHandler::LookupForm<T> tests
+			// form->Is(T::FORMTYPE) - an EXACT type match - so asking it for a TESBoundObject, which is a
+			// base class and not a form type anything actually is, returns null for every armour and weapon
+			// in the game. It compiles, and it silently finds nothing: the first build using it reported all
+			// six Sons of Skyrim pieces "not in the game" while the plugin was plainly loaded (2026-09-16).
+			// TESForm::LookupByID<T> does NOT behave this way - it uses As<T>(), which walks the hierarchy -
+			// which is why the vanilla half of the same kit worked and hid the fault.
+			auto* form = handler->LookupForm(a_item.formID, a_item.plugin);
+			return form ? form->As<RE::TESBoundObject>() : nullptr;
 		}
 
 		// Which kit this side actually gets. The preferred one needs another mod; without it the fallback
@@ -97,31 +110,10 @@ namespace start
 				logger::error("move: {}", a_problem);
 				return false;
 			}
+			g_destination = marker->GetParentCell();
 			a_player->MoveTo(marker);
 			logger::info("move: the player was sent to {} (marker {:08X})", a_side.arrivalDescription, a_side.arrivalMarker);
 
-			// Where they ACTUALLY ended up. "We asked the engine to move them" and "they are there" are
-			// different claims, and only the second is worth having in a bug report.
-			//
-			// The check waits half a second on its own thread before asking. Asking in this frame answers
-			// with the cell they are LEAVING, and so does a task queued from here - a task added while the
-			// task queue is being drained runs in the same drain, not the next frame. Both were tried and
-			// both reported "APStartCell" straight after a move into Windhelm (2026-09-16).
-			{
-				const char* where = a_side.arrivalDescription;
-				std::thread([where]() {
-					std::this_thread::sleep_for(std::chrono::milliseconds(500));
-					if (auto* task = SKSE::GetTaskInterface())
-					{
-						task->AddTask([where]() {
-							auto* player = RE::PlayerCharacter::GetSingleton();
-							const auto* cell = player ? player->GetParentCell() : nullptr;
-							logger::info("move: the player is now in cell {} (expected: {})",
-										 cell ? cell->GetFormEditorID() : "<unknown>", where);
-						});
-					}
-				}).detach();
-			}
 			return true;
 		}
 
@@ -254,60 +246,21 @@ namespace start
 			}).detach();
 		}
 
-		// A watchdog, not a second mechanism.
+		// THERE IS NO WATCHDOG, AND THAT IS DELIBERATE.
 		//
-		// The start hangs on one event firing, and an event that does not fire looks exactly like a player
-		// who chose a different start - the mod would sit there silently and Alternate Perspective would
-		// eventually decide the start was broken and drop the player in the Helgen inn. So the quests are
-		// also asked directly, a few times a second for a short while after the game begins. Whichever
-		// notices first runs the sequence; QueueRun only lets one of them through.
-		void StartWatchdogThread()
-		{
-			std::thread([]() {
-				for (int i = 0; i < 120; ++i)  // 30 seconds at 250ms
-				{
-					std::this_thread::sleep_for(std::chrono::milliseconds(250));
-					if (g_chosen.load()) { return; }
-					auto* task = SKSE::GetTaskInterface();
-					if (!task) { continue; }
-					task->AddTask([]() {
-						if (g_chosen.load()) { return; }
-						for (std::size_t side = 0; side < starts::kSideCount; ++side)
-						{
-							auto* quest = OurQuest(side);
-							// IsEnabled() is the only one of these that means what it sounds like.
-							// IsRunning() is "not stopping and not mid-promotion" and is TRUE for a quest
-							// that has never run, so a watchdog built on it fires on every ordinary save
-							// load - which is exactly what happened on the first live test: loading a save
-							// teleported the player to Windhelm and handed them a uniform they never asked
-							// for (2026-09-16).
-							if (!quest || !quest->IsEnabled()) { continue; }
-							g_chosen.store(true);
-							logger::info("watchdog: the {} quest is enabled but no start event was seen; running it",
-										 starts::kSides[side].key);
-							QueueRun(side, "watchdog");
-							return;
-						}
-					});
-				}
-			}).detach();
-		}
+		// One used to live here: it polled our quests every quarter second after a game began and ran the
+		// start if one looked enabled, in case the quest-start event never reached us. It cost more than it
+		// was worth. Alternate Perspective's hand-off is a Start() call made when the player walks through
+		// the door, and the event for it has arrived on every clean run - while the watchdog, which only
+		// ever asks "does this quest look started", fired 13ms AHEAD of the event once and then fired at
+		// SELECTION time: the owner picked a side and was teleported on the spot instead of walking through
+		// the door (2026-09-16). A guard that can act at the wrong moment is worse than no guard, when the
+		// thing it guards has never actually failed.
+		//
+		// If the event ever does go missing the symptom is clear - the start does nothing, the log says
+		// nothing after "listening", and the Status page says the start was never chosen. That is a
+		// diagnosable silence, not a teleport nobody asked for.
 
-		// The rest of the start, one step per drawn frame.
-		//
-		// A cross-cell teleport and a full set of armour going on are both heavy pieces of 3D work, and doing
-		// them together in a single frame asks every mod that rebuilds itself from the player's body to do so
-		// at once. On 2026-09-16 the first end-to-end run through Alternate Perspective's own menu crashed
-		// three seconds later inside Faster HDT-SMP (hdt::CudaBody::Imp, on one of its worker threads,
-		// rebuilding collision bodies). No frame of this mod was in that stack, and a later run doing exactly
-		// the same work did not crash - so the crash is not ours and may not even be ours to provoke. Pacing
-		// the work is still the right shape for it.
-		//
-		// The steps are CHAINED, not timed. The first attempt slept between queueing them and that staged
-		// nothing at all: during the cell transition the game does not pump its task queue, so everything
-		// queued across those ~1.8 seconds drained in a single frame the moment it resumed - the log showed
-		// the whole sequence inside four milliseconds. A step now schedules the NEXT one only once it has
-		// itself run, so a loading screen can delay the sequence but can never collapse it.
 		void QueueStep(std::size_t a_side, std::string a_reason, std::size_t a_step);
 
 		// Filled by the first step, read by the ones after it. Only ever touched on the main thread.
@@ -315,15 +268,56 @@ namespace start
 		const starts::Item* g_kit = nullptr;
 		std::size_t g_kitCount = 0;
 
-		// Step 0 fills the pack; steps 1..kitCount wear one piece each; the last step starts the questline.
+		// How many times the arrival step looks before giving up and carrying on anyway.
+		inline constexpr int kArrivalLooks = 40;
+		int g_arrivalLooks = 0;
+
+		// The order, and it is deliberate (the owner, 2026-09-16: "we should only get the items after
+		// teleporting" and "the quest should happen and then the equipment"):
+		//   0        wait until the player has actually arrived
+		//   1        start the civil war questline
+		//   2        fill the pack
+		//   3..n     wear one piece per frame
+		//   last     stop our own quests and say what happened
 		void RunStep(std::size_t a_side, std::string a_reason, std::size_t a_step)
 		{
 			const auto& side = starts::kSides[a_side];
 			auto* player = RE::PlayerCharacter::GetSingleton();
-			const std::size_t wearFirst = 1;
+			const std::size_t wearFirst = 3;
 			const std::size_t wearLast = wearFirst + std::max(side.kitCount, side.fallbackKitCount);  // one past the last wear step
 
+			// Step 0: are they there yet? Checked, not timed - a teleport takes as long as it takes, and on
+			// a slow load a timer hands somebody a uniform while they are still watching a loading screen.
 			if (a_step == 0)
+			{
+				const auto* here = player ? player->GetParentCell() : nullptr;
+				const bool arrived = !g_destination || (here && here == g_destination);
+				if (!arrived && ++g_arrivalLooks < kArrivalLooks)
+				{
+					QueueStep(a_side, a_reason, 0);
+					return;
+				}
+				logger::info("move: the player is now in cell {} (expected: {}){}",
+							 here ? here->GetFormEditorID() : "<unknown>", side.arrivalDescription,
+							 arrived ? "" : " - gave up waiting and carried on");
+				QueueStep(a_side, a_reason, 1);
+				return;
+			}
+
+			// Step 1: the questline, before anything is handed over.
+			if (a_step == 1)
+			{
+				{
+					std::scoped_lock l(g_lock);
+					if (settings::start::startCivilWarQuest) { g_report.questStarted = StartQuestline(side, g_report.problem); }
+					else { logger::info("questline: skipped (bStartCivilWarQuest=0)"); }
+				}
+				QueueStep(a_side, a_reason, 2);
+				return;
+			}
+
+			// Step 2: the pack.
+			if (a_step == 2)
 			{
 				g_given.clear();
 				g_kit = nullptr;
@@ -355,13 +349,8 @@ namespace start
 				return;
 			}
 
-			// The last step: the questline, then tidy up and say what actually happened.
-			{
-				std::scoped_lock l(g_lock);
-				if (settings::start::startCivilWarQuest) { g_report.questStarted = StartQuestline(side, g_report.problem); }
-				else { logger::info("questline: skipped (bStartCivilWarQuest=0)"); }
-			}
-
+			// The last step: tidy up and say what actually happened.
+			//
 			// Our own quests have nothing left to do once one has run, and a quest left running is a quest
 			// that shows up in save inspections forever. Both are stopped, not just the one that ran: the
 			// other was never started, and Stop() on a stopped quest is harmless.
@@ -398,6 +387,7 @@ namespace start
 
 		void StageTheRest(std::size_t a_side, std::string a_reason)
 		{
+			g_arrivalLooks = 0;
 			QueueStep(a_side, std::move(a_reason), 0);
 		}
 
@@ -464,7 +454,9 @@ namespace start
 
 	void WatchForStart()
 	{
-		StartWatchdogThread();
+		// Nothing to do: the quest-start event is the only trigger. See the note where the watchdog used
+		// to be. Kept as a call site so main.cpp still marks where a game begins.
+		logger::debug("a game has begun; waiting for Alternate Perspective to start one of our quests");
 	}
 
 	std::size_t SideFromKey(const std::string& a_key)
@@ -520,8 +512,8 @@ namespace start
 		StageTheRest(a_side, report.reason);
 
 		report.ran = true;
-		logger::info("start ({}, {}): moved={}; the pack, the uniform and the questline follow over the next {:.2f}s",
-					 side.key, report.reason, report.moved, settings::general::stageGapSeconds * 3.0f);
+		logger::info("start ({}, {}): moved={}; the questline, the pack and the uniform follow once you are there",
+					 side.key, report.reason, report.moved);
 		g_report = report;
 		return true;
 	}

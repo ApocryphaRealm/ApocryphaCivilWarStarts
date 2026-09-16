@@ -4,6 +4,19 @@
 
 ### Changed
 
+- **The start now waits until you have actually arrived before handing anything over, and the
+  questline starts before the gear.** The owner, 2026-09-16: *"we should only get the items after
+  teleporting"* and *"the quest should happen and then the equipment"*. The order is: teleport, wait
+  until you are standing in the war room (checked, not timed - a slow load is waited out), start the
+  recruitment quest, fill the pack, then wear the uniform a piece at a time.
+- **The teleport is prompt.** The wait before it dropped from a second to a quarter of a second, and
+  the beat between steps from 0.40s to 0.15s - a full second read as a long stare at black
+  (*"it took too long to transport me"*). Raise `fStartDelaySeconds` if you ever land back in the
+  Resting Pilgrim.
+- **Fixed the kit from another mod coming up empty.** Every Sons of Skyrim piece reported "not in the
+  game" while the plugin was plainly loaded: `TESDataHandler::LookupForm<T>` tests for an EXACT form
+  type, so asking it for a `TESBoundObject` - a base class nothing actually is - returns null for
+  every armour and weapon there is. It now uses the untemplated lookup and `As<>`.
 - **Both sides now start in heavy armour, with a shield and a weapon.** The owner, 2026-09-16:
   *"i want to spawn with heavy armor and an axe and shield, all of which you can get from sons of
   skyrim mod"*.

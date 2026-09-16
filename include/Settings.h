@@ -33,8 +33,10 @@ namespace settings
 		// freezes the player and then watches to see whether the chosen start moves them out of the
 		// start cell. Waiting a moment lets the fade cover the arrival; waiting too long trips AP's own
 		// safety net, which says "You seem to be stuck. I'll move you into the Helgen Inn." and puts the
-		// player in Helgen instead. One second sits comfortably between the two.
-		inline float startDelaySeconds = 1.0f;
+		// player in Helgen instead. A quarter of a second is enough for the fade and keeps the teleport
+		// prompt - a full second read as a long wait staring at black (the owner, 2026-09-16: "it took too
+		// long to transport me"). Raise it if you ever land back in the Resting Pilgrim.
+		inline float startDelaySeconds = 0.25f;
 
 		// fStageGapSeconds:General - the beat between the parts of the start: the move, then filling the
 		// pack, then each piece of the uniform going on, then the questline. They are deliberately NOT done
@@ -42,7 +44,7 @@ namespace settings
 		// 3D work, and together in a single frame they make every mod that rebuilds itself from the player's
 		// body do so at once - which is when Faster HDT-SMP crashed on the first end-to-end run (2026-09-16).
 		// Raising this makes the start gentler and slower; 0 puts everything back in one frame.
-		inline float stageGapSeconds = 0.40f;
+		inline float stageGapSeconds = 0.15f;
 	}
 
 	namespace start

@@ -2,7 +2,7 @@
     "name": "apocryphacivilwarstarts",
     "version-string": "1.0.2",
     "description": "Alternate Perspective Civil War Starts. Begin in the Stormcloak or Imperial war room, in uniform, with the civil war recruitment questline running.",
-    "homepage": "https://github.com/ApocryphaRealm/ApocryphaCivilWarStarts",
+    "homepage": "https://github.com/ApocryphaRealm/CivilWarStarts",
     "license": "GPL-3.0-or-later",
     "dependencies": [
         "commonlibsse-ng",

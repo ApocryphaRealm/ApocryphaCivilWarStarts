@@ -23,4 +23,4 @@ lines and the source, is GPL-3.0-or-later from its first version.
 
 Components under other licences, with their notices: `THIRD_PARTY_NOTICES.md`.
 
-Source code: https://github.com/ApocryphaRealm/ApocryphaCivilWarStarts
+Source code: https://github.com/ApocryphaRealm/CivilWarStarts

@@ -8,7 +8,7 @@
 // Three pieces make that work, and only one of them is code:
 //   * Alternate Perspective Civil War Starts.esp - two quest records, one per side. They exist so AP has something to
 //     name and start; they hold no script and no aliases.
-//   * SKSE\AlternatePerspective\ApocryphaCivilWarStarts.json - the registration AP reads. Its format is
+//   * SKSE\AlternatePerspective\CivilWarStarts.json - the registration AP reads. Its format is
 //     AP 4.0's own schema, shipped at SKSE\AlternatePerspective\Schema\schema.json.
 //   * This DLL - it watches for one of those quests starting and does the work.
 //

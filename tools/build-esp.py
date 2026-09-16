@@ -3,7 +3,7 @@ r"""Author Alternate Perspective Civil War Starts.esp.
 
 There is no Creation Kit on this machine and this plugin does not need one: it holds exactly TWO
 records, one per side, and they exist only so Alternate Perspective has something to name in its menu
-and something to start. All of the behaviour is in ApocryphaCivilWarStarts.dll, which watches for one
+and something to start. All of the behaviour is in CivilWarStarts.dll, which watches for one
 of those quests starting. The plugin is written here the same way Build-PerkReallocationESP.py writes
 its own - raw TES4 records - so the result is byte-for-byte reproducible and reviewable in a diff.
 

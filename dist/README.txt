@@ -19,10 +19,10 @@ the officer's test and everything after it happen in game as they always do.
 WHAT IS IN THE PACKAGE
 ----------------------
   Alternate Perspective Civil War Starts.esp                             two quest records, nothing else
-  SKSE\Plugins\ApocryphaCivilWarStarts.dll                the mod
-  SKSE\Plugins\ApocryphaCivilWarStarts.pdb                debug symbols, so crash logs name this mod
-  SKSE\Plugins\ApocryphaCivilWarStarts.ini                the settings, with every one explained
-  SKSE\AlternatePerspective\ApocryphaCivilWarStarts.json  the starts, as Alternate Perspective reads them
+  SKSE\Plugins\CivilWarStarts.dll                the mod
+  SKSE\Plugins\CivilWarStarts.pdb                debug symbols, so crash logs name this mod
+  SKSE\Plugins\CivilWarStarts.ini                the settings, with every one explained
+  SKSE\AlternatePerspective\CivilWarStarts.json  the starts, as Alternate Perspective reads them
 
 
 REQUIREMENTS
@@ -50,7 +50,7 @@ INSTALLATION
 SETTINGS
 --------
   Everything is on this mod's page in the Apocrypha Menu Framework, and in
-  SKSE\Plugins\ApocryphaCivilWarStarts.ini, which explains each one where it sits. They apply to both
+  SKSE\Plugins\CivilWarStarts.ini, which explains each one where it sits. They apply to both
   sides:
 
     bEnabled               run the start at all
@@ -65,7 +65,7 @@ SETTINGS
 IF SOMETHING GOES WRONG
 -----------------------
   The log is at
-  Documents\My Games\Skyrim Special Edition\SKSE\ApocryphaCivilWarStarts.log
+  Documents\My Games\Skyrim Special Edition\SKSE\CivilWarStarts.log
   and it ships at full detail, so it already contains everything needed.
 
   "I arrived back in the Resting Pilgrim."  Raise fStartDelaySeconds a little.
@@ -79,4 +79,4 @@ IF SOMETHING GOES WRONG
 LICENCE
 -------
   GPL-3.0-or-later. See LICENSE, NOTICE.md and THIRD_PARTY_NOTICES.md.
-  Source: https://github.com/ApocryphaRealm/ApocryphaCivilWarStarts
+  Source: https://github.com/ApocryphaRealm/CivilWarStarts

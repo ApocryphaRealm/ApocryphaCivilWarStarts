@@ -16,9 +16,9 @@
 
 namespace starts
 {
-	inline constexpr const char* kLogName = "ApocryphaCivilWarStarts";
+	inline constexpr const char* kLogName = "CivilWarStarts";
 	inline constexpr const char* kDisplayName = "Alternate Perspective Civil War Starts";
-	inline constexpr const char* kIniName = "ApocryphaCivilWarStarts.ini";
+	inline constexpr const char* kIniName = "CivilWarStarts.ini";
 	inline constexpr const char* kPluginName = "Alternate Perspective Civil War Starts.esp";
 
 	struct Item

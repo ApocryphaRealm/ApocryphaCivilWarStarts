@@ -18,7 +18,7 @@ the officer's test and everything after it happen in game as they always do.
 
 WHAT IS IN THE PACKAGE
 ----------------------
-  Alternate Perspective Civil War Starts.esp                             two quest records, nothing else
+  Alternate Perspective Civil War Starts.esl                             two quest records, nothing else
   SKSE\Plugins\ApocryphaCivilWarStarts.dll                the mod
   SKSE\Plugins\ApocryphaCivilWarStarts.pdb                debug symbols, so crash logs name this mod
   SKSE\Plugins\ApocryphaCivilWarStarts.ini                the settings, with every one explained

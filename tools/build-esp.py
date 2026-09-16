@@ -66,6 +66,13 @@ def quest_record(formid: int, edid: str, full: str) -> bytes:
     return record(b"QUST", formid, body)
 
 
+# Skyrim allows 254 full plugins and 4,096 light ones. The owner, 2026-09-16: "we need to make sure
+# to ship any of our mods that have a plugin as an esl not an esp", and "which goes for past mods as
+# well". Every new record here sits between 0x000800 and 0x000FFF, which is the light range, so the
+# flag is all it takes.
+ESL_FLAG = 0x00000200
+
+
 def tes4_header(record_count: int, next_object_id: int) -> bytes:
     # HEDR: version(f32) numRecords(i32) nextObjectID(u32)
     hedr = struct.pack("<fiI", 1.7, record_count, next_object_id)
@@ -74,7 +81,7 @@ def tes4_header(record_count: int, next_object_id: int) -> bytes:
             sub(b"SNAM", DESCRIPTION.encode("cp1252") + b"\x00") +
             sub(b"MAST", b"Skyrim.esm\x00") +
             sub(b"DATA", struct.pack("<Q", 0)))
-    return record(b"TES4", 0, body)
+    return record(b"TES4", 0, body, flags=ESL_FLAG)
 
 
 def main(out_path: str) -> int:
@@ -96,5 +103,5 @@ def main(out_path: str) -> int:
 
 if __name__ == "__main__":
     here = os.path.dirname(os.path.abspath(__file__))
-    default = os.path.join(here, "..", "dist", "Alternate Perspective Civil War Starts.esp")
+    default = os.path.join(here, "..", "dist", "Alternate Perspective Civil War Starts.esl")
     sys.exit(main(sys.argv[1] if len(sys.argv) > 1 else os.path.normpath(default)))

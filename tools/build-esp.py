@@ -103,5 +103,5 @@ def main(out_path: str) -> int:
 
 if __name__ == "__main__":
     here = os.path.dirname(os.path.abspath(__file__))
-    default = os.path.join(here, "..", "dist", "Alternate Perspective Civil War Starts.esl")
+    default = os.path.join(here, "..", "dist", "Alternate Perspective Civil War Starts.esp")
     sys.exit(main(sys.argv[1] if len(sys.argv) > 1 else os.path.normpath(default)))

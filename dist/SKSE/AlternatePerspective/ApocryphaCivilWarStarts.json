@@ -1,0 +1,20 @@
+[
+  {
+    "mod": "ApocryphaCivilWarStarts.esp",
+    "text": "Civil War",
+    "description": "The war is already yours. Wake in your side's war room, in uniform, with the recruitment questline running and an officer waiting to put you to the test.",
+    "color": "0x8C6E3C",
+    "suboptions": [
+      {
+        "text": "Stormcloak Recruit",
+        "id": "0x800",
+        "color": "0x2F5D8C"
+      },
+      {
+        "text": "Imperial Recruit",
+        "id": "0x801",
+        "color": "0xC8A35B"
+      }
+    ]
+  }
+]

@@ -134,6 +134,19 @@ namespace UI
 								 "the Resting Pilgrim, lower it if you ever land in Helgen.");
 		}
 
+		float gap = settings::general::stageGapSeconds;
+		if (ImGuiMCP::SliderFloat("Beat between the steps (seconds)", &gap, 0.0f, 2.0f, "%.2f"))
+		{
+			settings::general::stageGapSeconds = std::clamp(gap, 0.0f, 5.0f);
+		}
+		if (ImGuiMCP::IsItemHovered())
+		{
+			ImGuiMCP::SetTooltip("The start is spread over several frames on purpose - move, then pack, then each "
+								 "piece of the uniform, then the questline - so that a teleport and a full set of "
+								 "armour do not land in the same frame. Raise it if you see a hitch or a crash on "
+								 "arrival with body-physics mods installed. 0 puts it all back in one frame.");
+		}
+
 		ImGuiMCP::Spacing();
 		ImGuiMCP::SeparatorText("Logging");
 

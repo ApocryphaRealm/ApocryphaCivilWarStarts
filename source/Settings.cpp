@@ -27,6 +27,7 @@ namespace settings
 			std::uint32_t logLevel;
 			bool enabled;
 			float startDelaySeconds;
+			float stageGapSeconds;
 			bool moveToWarRoom;
 			bool giveStarterEquipment;
 			bool equipStarterEquipment;
@@ -112,6 +113,7 @@ namespace settings
 			get("uloglevel:debug", debug::logLevel, ParseUInt);
 			get("benabled:general", general::enabled, ParseBool);
 			get("fstartdelayseconds:general", general::startDelaySeconds, ParseFloat);
+			get("fstagegapseconds:general", general::stageGapSeconds, ParseFloat);
 			get("bmovetowarroom:start", start::moveToWarRoom, ParseBool);
 			get("bgivestarterequipment:start", start::giveStarterEquipment, ParseBool);
 			get("bequipstarterequipment:start", start::equipStarterEquipment, ParseBool);
@@ -120,9 +122,10 @@ namespace settings
 			// A delay of zero means "act in the same frame AP hands over", which is exactly the case AP's own
 			// starts avoid. It is allowed, but it is clamped to something the engine can actually schedule.
 			general::startDelaySeconds = std::clamp(general::startDelaySeconds, 0.0f, 30.0f);
+			general::stageGapSeconds = std::clamp(general::stageGapSeconds, 0.0f, 5.0f);
 
-			logger::info("settings loaded from {}: enabled={} delay={:.2f}s move={} give={} equip={} questline={} logLevel={}{}",
-						 iniPath, general::enabled, general::startDelaySeconds, start::moveToWarRoom,
+			logger::info("settings loaded from {}: enabled={} delay={:.2f}s stageGap={:.2f}s move={} give={} equip={} questline={} logLevel={}{}",
+						 iniPath, general::enabled, general::startDelaySeconds, general::stageGapSeconds, start::moveToWarRoom,
 						 start::giveStarterEquipment, start::equipStarterEquipment, start::startCivilWarQuest,
 						 debug::logLevel, bad ? std::format(" ({} bad line(s) ignored)", bad) : "");
 			return true;
@@ -171,7 +174,7 @@ namespace settings
 	{
 		iniPath = (std::filesystem::current_path() / "Data" / "SKSE" / "Plugins" / a_iniFileName).string();
 
-		defaults = { debug::logLevel, general::enabled, general::startDelaySeconds,
+		defaults = { debug::logLevel, general::enabled, general::startDelaySeconds, general::stageGapSeconds,
 					 start::moveToWarRoom, start::giveStarterEquipment, start::equipStarterEquipment,
 					 start::startCivilWarQuest };
 
@@ -180,6 +183,7 @@ namespace settings
 			utils::MakeSetting("uLogLevel:Debug", static_cast<unsigned int>(debug::logLevel)),
 			utils::MakeSetting("bEnabled:General", general::enabled),
 			utils::MakeSetting("fStartDelaySeconds:General", general::startDelaySeconds),
+			utils::MakeSetting("fStageGapSeconds:General", general::stageGapSeconds),
 			utils::MakeSetting("bMoveToWarRoom:Start", start::moveToWarRoom),
 			utils::MakeSetting("bGiveStarterEquipment:Start", start::giveStarterEquipment),
 			utils::MakeSetting("bEquipStarterEquipment:Start", start::equipStarterEquipment),
@@ -224,6 +228,7 @@ namespace settings
 		WriteKey(lines, "Debug", "uLogLevel", std::to_string(debug::logLevel));
 		WriteKey(lines, "General", "bEnabled", general::enabled ? "1" : "0");
 		WriteKey(lines, "General", "fStartDelaySeconds", std::format("{:.2f}", general::startDelaySeconds));
+		WriteKey(lines, "General", "fStageGapSeconds", std::format("{:.2f}", general::stageGapSeconds));
 		WriteKey(lines, "Start", "bMoveToWarRoom", start::moveToWarRoom ? "1" : "0");
 		WriteKey(lines, "Start", "bGiveStarterEquipment", start::giveStarterEquipment ? "1" : "0");
 		WriteKey(lines, "Start", "bEquipStarterEquipment", start::equipStarterEquipment ? "1" : "0");
@@ -242,6 +247,7 @@ namespace settings
 		debug::logLevel = defaults.logLevel;
 		general::enabled = defaults.enabled;
 		general::startDelaySeconds = defaults.startDelaySeconds;
+		general::stageGapSeconds = defaults.stageGapSeconds;
 		start::moveToWarRoom = defaults.moveToWarRoom;
 		start::giveStarterEquipment = defaults.giveStarterEquipment;
 		start::equipStarterEquipment = defaults.equipStarterEquipment;

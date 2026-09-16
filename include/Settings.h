@@ -35,6 +35,14 @@ namespace settings
 		// safety net, which says "You seem to be stuck. I'll move you into the Helgen Inn." and puts the
 		// player in Helgen instead. One second sits comfortably between the two.
 		inline float startDelaySeconds = 1.0f;
+
+		// fStageGapSeconds:General - the beat between the parts of the start: the move, then filling the
+		// pack, then each piece of the uniform going on, then the questline. They are deliberately NOT done
+		// in one frame. A cross-cell teleport and a full set of armour appearing are both heavy pieces of
+		// 3D work, and together in a single frame they make every mod that rebuilds itself from the player's
+		// body do so at once - which is when Faster HDT-SMP crashed on the first end-to-end run (2026-09-16).
+		// Raising this makes the start gentler and slower; 0 puts everything back in one frame.
+		inline float stageGapSeconds = 0.40f;
 	}
 
 	namespace start

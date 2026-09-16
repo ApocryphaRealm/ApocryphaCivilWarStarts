@@ -1,5 +1,21 @@
 # Alternate Perspective Civil War Starts - changelog
 
+## 1.0.1 - 2026-09-16 - untested
+
+### Changed
+
+- **The start is spread over frames instead of happening in one.** The move, filling the pack, each
+  piece of the uniform going on, and the questline starting are now separate steps a beat apart, set
+  by the new `fStageGapSeconds` (0.40 by default, and a slider on the settings page).
+
+  Why: on the first end-to-end run through Alternate Perspective's own menu, the game crashed three
+  seconds after arrival. The crash was entirely inside Faster HDT-SMP - `hdt::CudaBody::Imp`, on one
+  of its own worker threads, rebuilding collision bodies - with no frame of this mod anywhere in the
+  stack, so the fault is not this mod's to fix. The *churn* is, though: a cross-cell teleport and a
+  full set of armour going on in a single frame ask every mod that rebuilds itself from the player's
+  body to do so at once. Spreading the work is gentler on whatever else is installed, and it is
+  better behaved regardless. Set `fStageGapSeconds=0` to put it all back in one frame.
+
 ## 1.0.0 - 2026-09-16 - untested
 
 First version.

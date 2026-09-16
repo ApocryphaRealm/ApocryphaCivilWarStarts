@@ -184,7 +184,7 @@ namespace DevBenchTool
 
 		constexpr const char* descriptor =
 			"{"
-			"\"description\":\"Alternate Perspective - Civil War Starts. op=state (default): the settings, and for "
+			"\"description\":\"Alternate Perspective Civil War Starts. op=state (default): the settings, and for "
 			"each side the marker it moves to, the quest it starts, whether its own start quest is enabled and what "
 			"the last run did. op=run with side (stormcloak|imperial): run that whole start sequence now - move the "
 			"player to that side's war room, give and wear that side's uniform, and start CW01B or CW01A - without "

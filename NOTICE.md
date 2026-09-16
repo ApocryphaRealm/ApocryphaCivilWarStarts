@@ -1,4 +1,4 @@
-# Alternate Perspective - Civil War Starts - copyright and licence
+# Alternate Perspective Civil War Starts - copyright and licence
 
 Copyright (C) 2026 ApocryphaRealm
 

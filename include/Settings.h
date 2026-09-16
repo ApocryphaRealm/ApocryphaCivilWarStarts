@@ -1,6 +1,6 @@
 #pragma once
 
-// Settings for Alternate Perspective - Civil War Starts. Plain-file INI beside the DLL (the project
+// Settings for Alternate Perspective Civil War Starts. Plain-file INI beside the DLL (the project
 // standard: redirector-proof, and readable by a player without a mod manager).
 //
 // Both sides share these settings. Nothing here is per-side: a player who wants the uniform for one

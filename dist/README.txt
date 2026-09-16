@@ -1,4 +1,4 @@
-Alternate Perspective - Civil War Starts
+Alternate Perspective Civil War Starts
 ========================================
 
 An add-on for Alternate Perspective. It adds a "Civil War" card to the menu the Messenger offers you
@@ -17,7 +17,7 @@ the officer's test and everything after it happen in game as they always do.
 
 WHAT IS IN THE PACKAGE
 ----------------------
-  ApocryphaCivilWarStarts.esp                             two quest records, nothing else
+  Alternate Perspective Civil War Starts.esp                             two quest records, nothing else
   SKSE\Plugins\ApocryphaCivilWarStarts.dll                the mod
   SKSE\Plugins\ApocryphaCivilWarStarts.pdb                debug symbols, so crash logs name this mod
   SKSE\Plugins\ApocryphaCivilWarStarts.ini                the settings, with every one explained

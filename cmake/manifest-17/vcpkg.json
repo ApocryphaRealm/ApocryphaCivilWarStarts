@@ -1,7 +1,7 @@
 {
   "name": "apocryphacivilwarstarts-17",
   "version-string": "1.0.0",
-  "description": "Alternate Perspective - Civil War Starts. Begin in the Stormcloak or Imperial war room, in uniform, with the civil war recruitment questline running. [Skyrim 1.7.x build line: CommonLibSSE-NG 7.2.0, cmake/ports-17]",
+  "description": "Alternate Perspective Civil War Starts. Begin in the Stormcloak or Imperial war room, in uniform, with the civil war recruitment questline running. [Skyrim 1.7.x build line: CommonLibSSE-NG 7.2.0, cmake/ports-17]",
   "homepage": "https://github.com/ApocryphaRealm/ApocryphaCivilWarStarts",
   "license": "GPL-3.0-or-later",
   "dependencies": [

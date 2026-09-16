@@ -1,6 +1,6 @@
 #pragma once
 
-// Alternate Perspective - Civil War Starts.
+// Alternate Perspective Civil War Starts.
 //
 // THE WHOLE MOD IS THIS TABLE PLUS THE CODE THAT READS IT. Both sides are one mod, one plugin and one
 // DLL; a side is a row here, and adding another one would be a row and a quest record, nothing else.
@@ -17,9 +17,9 @@
 namespace starts
 {
 	inline constexpr const char* kLogName = "ApocryphaCivilWarStarts";
-	inline constexpr const char* kDisplayName = "Alternate Perspective - Civil War Starts";
+	inline constexpr const char* kDisplayName = "Alternate Perspective Civil War Starts";
 	inline constexpr const char* kIniName = "ApocryphaCivilWarStarts.ini";
-	inline constexpr const char* kPluginName = "ApocryphaCivilWarStarts.esp";
+	inline constexpr const char* kPluginName = "Alternate Perspective Civil War Starts.esp";
 
 	struct Item
 	{

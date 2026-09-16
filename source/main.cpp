@@ -1,4 +1,4 @@
-// Alternate Perspective - Civil War Starts. Own code, GPL-3.0-or-later (2026-09-16).
+// Alternate Perspective Civil War Starts. Own code, GPL-3.0-or-later (2026-09-16).
 //
 // An add-on for Alternate Perspective (Nexus 50307). It adds two starts to AP's menu in the Resting
 // Pilgrim - Stormcloak Recruit and Imperial Recruit. Either puts the player in that side's war room
@@ -6,7 +6,7 @@
 // game's own recruitment questline running.
 //
 // Three pieces make that work, and only one of them is code:
-//   * ApocryphaCivilWarStarts.esp - two quest records, one per side. They exist so AP has something to
+//   * Alternate Perspective Civil War Starts.esp - two quest records, one per side. They exist so AP has something to
 //     name and start; they hold no script and no aliases.
 //   * SKSE\AlternatePerspective\ApocryphaCivilWarStarts.json - the registration AP reads. Its format is
 //     AP 4.0's own schema, shipped at SKSE\AlternatePerspective\Schema\schema.json.

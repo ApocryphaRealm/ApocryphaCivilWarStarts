@@ -1,5 +1,18 @@
 # Alternate Perspective Civil War Starts - changelog
 
+## 1.0.2 - 2026-09-16 - untested
+
+### Fixed
+
+- **The uniform can be taken off again.** It was being equipped with the engine's "force" flag, which is
+  what Papyrus calls `abPreventRemoval` - it does not merely put an item on, it locks it on (the owner,
+  2026-09-16: *"it wont let me unequip the items"*).
+
+  The flag had been added to fix a helmet that appeared not to equip, and that was never a fault here:
+  these starts all arrive **indoors**, and a mod that takes helmets off indoors was doing exactly what it
+  is meant to do. Forcing the equip would have broken that mod rather than fixed anything. Each piece
+  already gets its own frame after arrival, which is what actually makes the set go on reliably.
+
 ## 1.0.1 - 2026-09-16 - untested
 
 ### Changed

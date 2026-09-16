@@ -147,15 +147,23 @@ namespace start
 			return given;
 		}
 
-		// One piece, forced on. Forced because an ordinary equip is a request the actor can decline, and in
-		// the first live test that is exactly what happened - cuirass, boots and gauntlets went on and the
-		// helmet quietly did not (2026-09-16).
+		// One piece, worn normally - and NOT forced.
+		//
+		// forceEquip is what Papyrus calls abPreventRemoval: it does not merely put the item on, it LOCKS
+		// it on, and the player cannot take it off again (the owner, 2026-09-16: "it wont let me unequip
+		// the items").
+		//
+		// DO NOT PUT IT BACK. It was added to fix "the helmet did not go on", and that was never a fault
+		// here: the owner has a mod that takes helmets off indoors, and every one of these starts arrives
+		// INDOORS - so the helmet was being removed immediately, exactly as that mod is meant to do
+		// (the owner, 2026-09-16: "i have a mods that removes helmets indoors whis if fine"). Forcing it
+		// would not have fixed anything; it would have broken that mod and locked the whole uniform on.
 		bool WearOne(RE::PlayerCharacter* a_player, RE::TESBoundObject* a_object, const char* a_name)
 		{
 			auto* equipManager = RE::ActorEquipManager::GetSingleton();
 			if (!equipManager || !a_object) { return false; }
 			equipManager->EquipObject(a_player, a_object, nullptr, 1, nullptr,
-									  /*queueEquip*/ true, /*forceEquip*/ true, /*playSounds*/ false,
+									  /*queueEquip*/ true, /*forceEquip*/ false, /*playSounds*/ false,
 									  /*applyNow*/ false);
 			logger::debug("kit: equipped {}", a_name);
 			return true;

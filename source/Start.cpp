@@ -56,6 +56,38 @@ namespace start
 			return RE::TESForm::LookupByID<T>(a_id);
 		}
 
+		// A kit item, resolved. A piece from another mod is looked up by PLUGIN and local FormID, never by
+		// a baked full FormID - the plugin's index depends on where the player's load order puts it.
+		RE::TESBoundObject* KitObject(const starts::Item& a_item)
+		{
+			if (!a_item.plugin) { return Vanilla<RE::TESBoundObject>(a_item.formID); }
+			auto* handler = RE::TESDataHandler::GetSingleton();
+			return handler ? handler->LookupForm<RE::TESBoundObject>(a_item.formID, a_item.plugin) : nullptr;
+		}
+
+		// Which kit this side actually gets. The preferred one needs another mod; without it the fallback
+		// is used, so the mod never requires that mod and never hands out an empty set.
+		void ChooseKit(const starts::Side& a_side, const starts::Item*& a_kit, std::size_t& a_count)
+		{
+			a_kit = a_side.fallbackKit;
+			a_count = a_side.fallbackKitCount;
+			if (!a_side.kitPlugin) { a_kit = a_side.kit; a_count = a_side.kitCount; return; }
+
+			auto* handler = RE::TESDataHandler::GetSingleton();
+			const bool present = handler && handler->LookupModByName(a_side.kitPlugin) != nullptr;
+			if (present)
+			{
+				a_kit = a_side.kit;
+				a_count = a_side.kitCount;
+				logger::info("kit: {} is installed, so the {} start uses its gear", a_side.kitPluginName, a_side.key);
+			}
+			else
+			{
+				logger::info("kit: {} is not installed, so the {} start falls back to the game's own gear",
+							 a_side.kitPluginName, a_side.key);
+			}
+		}
+
 		bool MovePlayer(const starts::Side& a_side, RE::PlayerCharacter* a_player, std::string& a_problem)
 		{
 			auto* marker = Vanilla<RE::TESObjectREFR>(a_side.arrivalMarker);
@@ -95,16 +127,16 @@ namespace start
 
 		// Handing the set over and wearing it are two separate steps, and they do not share a frame - see
 		// the staged sequence in RunStaged below for why. This one only puts the items in the pack.
-		std::vector<RE::TESBoundObject*> GiveKit(const starts::Side& a_side, RE::PlayerCharacter* a_player,
-												 int& a_given, std::string& a_problem)
+		std::vector<RE::TESBoundObject*> GiveKit(const starts::Item* a_kit, std::size_t a_count,
+												 RE::PlayerCharacter* a_player, int& a_given, std::string& a_problem)
 		{
 			std::vector<RE::TESBoundObject*> given;
-			given.reserve(a_side.kitCount);
+			given.reserve(a_count);
 
-			for (std::size_t i = 0; i < a_side.kitCount; ++i)
+			for (std::size_t i = 0; i < a_count; ++i)
 			{
-				const auto& item = a_side.kit[i];
-				auto* object = Vanilla<RE::TESBoundObject>(item.formID);
+				const auto& item = a_kit[i];
+				auto* object = KitObject(item);
 				if (!object)
 				{
 					// One missing record is worth saying out loud but is not worth abandoning the rest of the
@@ -261,88 +293,112 @@ namespace start
 			}).detach();
 		}
 
-		// The rest of the start, spread over frames instead of crammed into one.
+		// The rest of the start, one step per drawn frame.
 		//
-		// A cross-cell teleport and a full set of armour going on are both heavy pieces of 3D work, and
-		// doing them together in a single frame asks every mod that rebuilds itself from the player's body
-		// to do so at once. On 2026-09-16 the first end-to-end run through Alternate Perspective's own menu
-		// crashed three seconds later inside Faster HDT-SMP (hdt::CudaBody::Imp, on one of its worker
-		// threads, rebuilding collision bodies). No frame of this mod was in that stack and the fault is
-		// not ours to fix - but the churn that provoked it IS ours to avoid, and spreading the work is
-		// better behaved regardless of what else is installed.
+		// A cross-cell teleport and a full set of armour going on are both heavy pieces of 3D work, and doing
+		// them together in a single frame asks every mod that rebuilds itself from the player's body to do so
+		// at once. On 2026-09-16 the first end-to-end run through Alternate Perspective's own menu crashed
+		// three seconds later inside Faster HDT-SMP (hdt::CudaBody::Imp, on one of its worker threads,
+		// rebuilding collision bodies). No frame of this mod was in that stack, and a later run doing exactly
+		// the same work did not crash - so the crash is not ours and may not even be ours to provoke. Pacing
+		// the work is still the right shape for it.
 		//
-		// So: the move has already happened; the pack is filled a beat later, each piece is worn on its own
-		// frame after that, and the questline starts last. fStageGapSeconds sets the beat.
+		// The steps are CHAINED, not timed. The first attempt slept between queueing them and that staged
+		// nothing at all: during the cell transition the game does not pump its task queue, so everything
+		// queued across those ~1.8 seconds drained in a single frame the moment it resumed - the log showed
+		// the whole sequence inside four milliseconds. A step now schedules the NEXT one only once it has
+		// itself run, so a loading screen can delay the sequence but can never collapse it.
+		void QueueStep(std::size_t a_side, std::string a_reason, std::size_t a_step);
+
+		// Filled by the first step, read by the ones after it. Only ever touched on the main thread.
+		std::vector<RE::TESBoundObject*> g_given;
+		const starts::Item* g_kit = nullptr;
+		std::size_t g_kitCount = 0;
+
+		// Step 0 fills the pack; steps 1..kitCount wear one piece each; the last step starts the questline.
+		void RunStep(std::size_t a_side, std::string a_reason, std::size_t a_step)
+		{
+			const auto& side = starts::kSides[a_side];
+			auto* player = RE::PlayerCharacter::GetSingleton();
+			const std::size_t wearFirst = 1;
+			const std::size_t wearLast = wearFirst + std::max(side.kitCount, side.fallbackKitCount);  // one past the last wear step
+
+			if (a_step == 0)
+			{
+				g_given.clear();
+				g_kit = nullptr;
+				g_kitCount = 0;
+				if (player && settings::start::giveStarterEquipment)
+				{
+					ChooseKit(side, g_kit, g_kitCount);
+					std::scoped_lock l(g_lock);
+					g_given = GiveKit(g_kit, g_kitCount, player, g_report.itemsGiven, g_report.problem);
+				}
+				else
+				{
+					logger::info("kit: skipped (bGiveStarterEquipment=0)");
+				}
+				QueueStep(a_side, a_reason, settings::start::equipStarterEquipment ? wearFirst : wearLast);
+				return;
+			}
+
+			if (a_step >= wearFirst && a_step < wearLast)
+			{
+				const std::size_t i = a_step - wearFirst;
+				if (player && g_kit && i < g_kitCount && i < g_given.size() && g_given[i] && g_kit[i].equip &&
+					WearOne(player, g_given[i], g_kit[i].name))
+				{
+					std::scoped_lock l(g_lock);
+					++g_report.itemsEquipped;
+				}
+				QueueStep(a_side, a_reason, a_step + 1);
+				return;
+			}
+
+			// The last step: the questline, then tidy up and say what actually happened.
+			{
+				std::scoped_lock l(g_lock);
+				if (settings::start::startCivilWarQuest) { g_report.questStarted = StartQuestline(side, g_report.problem); }
+				else { logger::info("questline: skipped (bStartCivilWarQuest=0)"); }
+			}
+
+			// Our own quests have nothing left to do once one has run, and a quest left running is a quest
+			// that shows up in save inspections forever. Both are stopped, not just the one that ran: the
+			// other was never started, and Stop() on a stopped quest is harmless.
+			for (std::size_t i = 0; i < starts::kSideCount; ++i)
+			{
+				if (auto* ours = OurQuest(i); ours && ours->IsEnabled())
+				{
+					ours->Stop();
+					logger::debug("start: our own {} quest stopped", starts::kSides[i].key);
+				}
+			}
+
+			std::scoped_lock l(g_lock);
+			logger::info("start ({}, {}): finished - moved={} given={} worn={} questline={}{}",
+						 side.key, a_reason, g_report.moved, g_report.itemsGiven, g_report.itemsEquipped,
+						 g_report.questStarted,
+						 g_report.problem.empty() ? "" : std::format(" (problem: {})", g_report.problem));
+		}
+
+		void QueueStep(std::size_t a_side, std::string a_reason, std::size_t a_step)
+		{
+			const float gap = std::clamp(settings::general::stageGapSeconds, 0.0f, 5.0f);
+			std::thread([a_side, a_reason, a_step, gap]() {
+				if (gap > 0.0f)
+				{
+					std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(gap * 1000.0f)));
+				}
+				if (auto* tasks = SKSE::GetTaskInterface())
+				{
+					tasks->AddTask([a_side, a_reason, a_step]() { RunStep(a_side, a_reason, a_step); });
+				}
+			}).detach();
+		}
+
 		void StageTheRest(std::size_t a_side, std::string a_reason)
 		{
-			const float gap = settings::general::stageGapSeconds;
-			std::thread([a_side, a_reason, gap]() {
-				const auto beat = std::chrono::milliseconds(static_cast<int>(std::max(gap, 0.0f) * 1000.0f));
-				auto* tasks = SKSE::GetTaskInterface();
-				if (!tasks) { return; }
-				const auto& side = starts::kSides[a_side];
-
-				// Filled by the first task, read by the ones after it. Only ever touched on the main thread.
-				static std::vector<RE::TESBoundObject*> given;
-
-				std::this_thread::sleep_for(beat);
-				tasks->AddTask([a_side]() {
-					const auto& s = starts::kSides[a_side];
-					auto* player = RE::PlayerCharacter::GetSingleton();
-					given.clear();
-					if (!player || !settings::start::giveStarterEquipment)
-					{
-						logger::info("kit: skipped (bGiveStarterEquipment=0)");
-						return;
-					}
-					std::scoped_lock l(g_lock);
-					given = GiveKit(s, player, g_report.itemsGiven, g_report.problem);
-				});
-
-				if (settings::start::giveStarterEquipment && settings::start::equipStarterEquipment)
-				{
-					std::this_thread::sleep_for(beat);
-					for (std::size_t i = 0; i < side.kitCount; ++i)
-					{
-						tasks->AddTask([a_side, i]() {
-							const auto& s = starts::kSides[a_side];
-							auto* player = RE::PlayerCharacter::GetSingleton();
-							if (!player || i >= given.size() || !given[i] || !s.kit[i].equip) { return; }
-							if (WearOne(player, given[i], s.kit[i].name))
-							{
-								std::scoped_lock l(g_lock);
-								++g_report.itemsEquipped;
-							}
-						});
-						// One piece per beat/4, so the set goes on over several frames rather than all at once.
-						std::this_thread::sleep_for(beat / 4);
-					}
-				}
-
-				std::this_thread::sleep_for(beat);
-				tasks->AddTask([a_side, a_reason]() {
-					const auto& s = starts::kSides[a_side];
-					std::scoped_lock l(g_lock);
-					if (settings::start::startCivilWarQuest) { g_report.questStarted = StartQuestline(s, g_report.problem); }
-					else { logger::info("questline: skipped (bStartCivilWarQuest=0)"); }
-
-					// Our own quests have nothing left to do once one has run, and a quest left running is a
-					// quest that shows up in save inspections forever. Both are stopped, not just the one that
-					// ran: the other was never started, and Stop() on a stopped quest is harmless.
-					for (std::size_t i = 0; i < starts::kSideCount; ++i)
-					{
-						if (auto* ours = OurQuest(i); ours && ours->IsEnabled())
-						{
-							ours->Stop();
-							logger::debug("start: our own {} quest stopped", starts::kSides[i].key);
-						}
-					}
-					logger::info("start ({}, {}): finished - moved={} given={} worn={} questline={}{}",
-								 s.key, a_reason, g_report.moved, g_report.itemsGiven, g_report.itemsEquipped,
-								 g_report.questStarted,
-								 g_report.problem.empty() ? "" : std::format(" (problem: {})", g_report.problem));
-				});
-			}).detach();
+			QueueStep(a_side, std::move(a_reason), 0);
 		}
 
 		class QuestSink : public RE::BSTEventSink<RE::TESQuestStartStopEvent>

@@ -4,6 +4,20 @@
 
 ### Changed
 
+- **Both sides now start in heavy armour, with a shield and a weapon.** The owner, 2026-09-16:
+  *"i want to spawn with heavy armor and an axe and shield, all of which you can get from sons of
+  skyrim mod"*.
+  - **Stormcloak, with [Sons of Skyrim](https://www.nexusmods.com/skyrimspecialedition/mods/68656)
+    installed:** Windhelm Heavy Armor, Windhelm Helmet, Windhelm Shield, Lamellar Heavy Boots and
+    Gauntlets, and a Nord Heavy War Axe - the kit that mod gives Windhelm's own soldiers.
+  - **Stormcloak, without it:** the game's own Stormcloak uniform, now with an iron shield and an
+    iron war axe rather than a sword.
+  - **Imperial:** the Legion's heavy set - Imperial armour, boots, gauntlets, helmet, shield and sword.
+
+  Sons of Skyrim is **not a requirement**. Its pieces are looked up by plugin and local FormID at
+  runtime, so the load order decides the real IDs, and if the plugin is not loaded the fallback kit is
+  used instead. The log says which of the two it chose.
+
 - **The start is spread over frames instead of happening in one.** The move, filling the pack, each
   piece of the uniform going on, and the questline starting are now separate steps a beat apart, set
   by the new `fStageGapSeconds` (0.40 by default, and a slider on the settings page).

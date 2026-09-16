@@ -8,7 +8,8 @@ in the Resting Pilgrim, with two starts under it:
   Imperial Recruit     the war room of Castle Dour, Solitude
 
 Choose one and the game begins there, on the floor beside the war map where that side's command
-stands, in that side's uniform, with the game's own civil war recruitment quest already running.
+stands, in heavy armour with a shield and a weapon, and with the game's own civil war recruitment
+quest already running.
 Galmar Stone-Fist or Legate Rikke is waiting to put you to the test, exactly as if you had walked in.
 
 Nothing is skipped ahead. The mod starts the recruitment quest at its own opening stage, so the oath,

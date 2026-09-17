@@ -1,5 +1,6 @@
 Alternate Perspective Civil War Starts
 ========================================
+Version 1.0.3
 
 An add-on for Alternate Perspective. It adds a "Civil War" card to the menu the Messenger offers you
 in the Resting Pilgrim, with two starts under it:

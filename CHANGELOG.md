@@ -1,5 +1,22 @@
 # Alternate Perspective Civil War Starts - changelog
 
+## 1.0.3 - 2026-09-16 - untested
+
+### Changed
+
+- **The "Apocrypha" prefix is gone from the files** (the owner, 2026-09-16: *"Unprefix all of them.
+  I don't care"*; framework mods keep theirs, this is not one). The DLL is `CivilWarStarts.dll`, so
+  the INI is `CivilWarStarts.ini`, the log `CivilWarStarts.log` and the Alternate Perspective
+  registration `SKSE\AlternatePerspective\CivilWarStarts.json`. Settings in an old
+  `ApocryphaCivilWarStarts.ini` are not read; copy your values across once.
+- **The plugin is an ESPFE** - `Alternate Perspective Civil War Starts.esp` carrying the light flag -
+  instead of a `.esl` file (the owner's standing rule, 2026-09-16). A `.esl` file is forced to the top
+  of the load order where nothing can sort below it; the `.esp` keeps the FE-space FormIDs and the
+  freedom from the 254-slot limit, and sorts among ordinary plugins. Same two records, same FormIDs.
+  Remove the old `.esl` when updating - a mod manager does this for you.
+
+No behaviour change; the code is 1.0.2's with a new version stamp.
+
 ## 1.0.2 - 2026-09-16 - untested
 
 ### Fixed

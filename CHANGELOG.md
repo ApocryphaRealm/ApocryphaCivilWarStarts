@@ -15,6 +15,8 @@
   freedom from the 254-slot limit, and sorts among ordinary plugins. Same two records, same FormIDs.
   Remove the old `.esl` when updating - a mod manager does this for you.
 
+- **Saves:** Updating from the old .esl: let your mod manager remove the old file. A save made with the .esl loaded will not carry this mod's records over to the renamed plugin - the game ties them to the file name - so treat this like installing the mod fresh: existing saves lose what came from the old plugin, and a new game or a save that never had it is clean.
+
 No behaviour change; the code is 1.0.2's with a new version stamp.
 
 ## 1.0.2 - 2026-09-16 - untested

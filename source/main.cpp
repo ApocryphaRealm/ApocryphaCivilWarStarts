@@ -21,6 +21,7 @@
 #include "Starts.h"
 #include "UI.h"
 
+#include "utils/AddressLibraryGuard.h"
 #include "utils/Logger.h"
 
 namespace
@@ -55,8 +56,15 @@ namespace
 
 SKSEPluginLoad(const SKSE::LoadInterface* a_skse)
 {
-	SKSE::Init(a_skse);
 	SKSE::log::init(starts::kLogName);
+	// Address Library pre-check (the guard every mod of ours carries), BEFORE SKSE::Init, which opens the
+	// Address Library itself (logic library 6026): a missing file gets a message naming it and the plugin
+	// loads inert instead of CommonLibSSE-NG's bare failure line.
+	if (!AddressLibraryGuard::Guard("Alternate Perspective Civil War Starts"))
+	{
+		return true;
+	}
+	SKSE::Init(a_skse);
 
 	settings::Init(starts::kIniName);
 	settings::ApplyLogLevel();

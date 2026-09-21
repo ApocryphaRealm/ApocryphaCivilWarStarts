@@ -1,5 +1,14 @@
 # Alternate Perspective Civil War Starts - changelog
 
+## 1.0.5 - 2026-09-21 - untested
+
+### Added
+- **Skyrim 1.7.x build.** The download is now a FOMOD installer that asks which Skyrim you have and installs the
+  matching DLL: SE 1.5.97 / AE 1.6.1170 (CommonLibSSE-NG 3.7, as before) or Skyrim 1.7.99 / 1.7.104
+  (CommonLibSSE-NG 7.2, needs SKSE 2.3.x and Address Library All-in-One v13 or newer). A 1.7 player on the old
+  single DLL got "failed to open address library file" at load (Adagium721's report, 2026-09-21).
+  Everything else - the plugin, the INI, the Alternate Perspective registration - is shared and unchanged.
+
 ## 1.0.4 - 2026-09-18 - untested
 
 ### Changed

@@ -175,8 +175,9 @@ namespace start
 		// none of that.
 		bool SetStage(RE::TESQuest* a_quest, std::uint16_t a_stage)
 		{
-			auto* skyrimVM = RE::SkyrimVM::GetSingleton();
-			auto* vm = skyrimVM ? skyrimVM->impl.get() : nullptr;
+			// VirtualMachine::GetSingleton() resolves SkyrimVM's impl at the right offset on every runtime; the
+			// member itself moved on 1.7.99 (Amiibo base class) and is reached through VM_RUNTIME_DATA there.
+			auto* vm = RE::BSScript::Internal::VirtualMachine::GetSingleton();
 			if (!vm) { return false; }
 			auto* policy = vm->GetObjectHandlePolicy();
 			if (!policy) { return false; }

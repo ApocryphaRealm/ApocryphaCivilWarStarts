@@ -20,7 +20,7 @@ the officer's test and everything after it happen in game as they always do.
 WHAT IS IN THE PACKAGE
 ----------------------
   Alternate Perspective Civil War Starts.esp                             two quest records, nothing else
-  SKSE\Plugins\CivilWarStarts.dll                the mod
+  SKSE\Plugins\CivilWarStarts.dll                the mod - the installer puts in the build for your game
   SKSE\Plugins\CivilWarStarts.pdb                debug symbols, so crash logs name this mod
   SKSE\Plugins\CivilWarStarts.ini                the settings, with every one explained
   SKSE\AlternatePerspective\CivilWarStarts.json  the starts, as Alternate Perspective reads them
@@ -33,7 +33,8 @@ REQUIREMENTS
   Alternate Perspective - Alternate Start 4.0 or newer
   JContainers SE - Alternate Perspective's own requirement; without it AP shows only its own starts
 
-  Supported runtimes: Skyrim SE 1.5.97 and AE 1.6.1170.
+  Supported runtimes: Skyrim SE 1.5.97, AE 1.6.1170, and Skyrim 1.7.99 / 1.7.104 - the installer asks
+  which one you have and installs the matching DLL.
 
   Optional: the Apocrypha Menu Framework (or SKSE Menu Framework), which is where this mod's settings
   page appears. Without one the mod reads its INI and works the same; it simply has no page.
@@ -41,7 +42,8 @@ REQUIREMENTS
 
 INSTALLATION
 ------------
-  Install with a mod manager and enable the plugin. Load order does not matter - nothing in this mod
+  Install with a mod manager, pick your game version in the installer, and enable the plugin. Load
+  order does not matter - nothing in this mod
   overrides anything.
 
   Nothing else needs setting up. The starts appear in Alternate Perspective's menu on the next new
@@ -75,6 +77,13 @@ IF SOMETHING GOES WRONG
                                             and it fired before this mod acted.
   "The starts are not in the menu."          Check that JContainers SE is installed - without it
                                             Alternate Perspective shows only its own starts.
+
+
+WHAT CHANGED
+------------
+Version 1.0.5
+Adds a Skyrim 1.7.99 / 1.7.104 build. The download is now a FOMOD installer that asks which Skyrim you have and
+installs the matching DLL (SE 1.5.97 / AE 1.6.1170 as before, or 1.7.x). No other change.
 
 
 LICENCE

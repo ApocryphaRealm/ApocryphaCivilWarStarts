@@ -66,7 +66,7 @@ IF SOMETHING GOES WRONG
 -----------------------
   The log is at
   Documents\My Games\Skyrim Special Edition\SKSE\CivilWarStarts.log
-  and it ships at full detail, so it already contains everything needed.
+  and it ships at info. For a bug report, set uLogLevel=0 in the INI, reproduce, and send the log.
 
   "I arrived back in the Resting Pilgrim."  Raise fStartDelaySeconds a little.
   "I ended up in Helgen."                   Lower it. Alternate Perspective has a safety net that
@@ -78,6 +78,9 @@ IF SOMETHING GOES WRONG
 
 WHAT CHANGED
 ------------
+Version 1.0.6
+The log ships at info. For a bug report, set uLogLevel=0 in the INI.
+
 Version 1.0.5
 Adds a Skyrim 1.7.99 / 1.7.104 build. The download is now a FOMOD installer that asks which Skyrim you have and
 installs the matching DLL (SE 1.5.97 / AE 1.6.1170 as before, or 1.7.x).

@@ -1,5 +1,14 @@
 # Alternate Perspective Civil War Starts - changelog
 
+## 1.0.6 - 2026-10-02
+
+### Changed
+- **The log ships at info** (`uLogLevel=2`, compiled and in the INI), the standing default since the owner's
+  2026-09-26 rule ("ship all innies from now on at default of info"); it shipped at trace. The pre-finalize check
+  caught it on the 1.0.5 finalize. For a bug report, set `uLogLevel=0`, reproduce, and send the log.
+- 1.0.5 was tagged but never released; 1.0.6 is the release carrying it (the Skyrim 1.7.x build line, no menu page,
+  the wrong-build message).
+
 ## 1.0.5 - 2026-09-21 - untested
 
 ### Added

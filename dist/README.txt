@@ -36,9 +36,6 @@ REQUIREMENTS
   Supported runtimes: Skyrim SE 1.5.97, AE 1.6.1170, and Skyrim 1.7.99 / 1.7.104 - the installer asks
   which one you have and installs the matching DLL.
 
-  Optional: the Apocrypha Menu Framework (or SKSE Menu Framework), which is where this mod's settings
-  page appears. Without one the mod reads its INI and works the same; it simply has no page.
-
 
 INSTALLATION
 ------------
@@ -52,7 +49,7 @@ INSTALLATION
 
 SETTINGS
 --------
-  Everything is on this mod's page in the Apocrypha Menu Framework, and in
+  There is no in-game menu: the mod simply adds the two starts. The settings are in
   SKSE\Plugins\CivilWarStarts.ini, which explains each one where it sits. They apply to both
   sides:
 
@@ -83,7 +80,10 @@ WHAT CHANGED
 ------------
 Version 1.0.5
 Adds a Skyrim 1.7.99 / 1.7.104 build. The download is now a FOMOD installer that asks which Skyrim you have and
-installs the matching DLL (SE 1.5.97 / AE 1.6.1170 as before, or 1.7.x). No other change.
+installs the matching DLL (SE 1.5.97 / AE 1.6.1170 as before, or 1.7.x).
+Removes the in-game menu page; every setting stays in the INI.
+Names the other installer option when the wrong build is installed for the game, instead of asking for an
+Address Library file that does not exist.
 
 
 LICENCE

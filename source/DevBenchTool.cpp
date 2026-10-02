@@ -70,19 +70,27 @@ namespace DevBenchTool
 		{
 			auto* tasks = SKSE::GetTaskInterface();
 			if (!tasks) { return false; }
-			auto done = std::make_shared<std::atomic<bool>>(false);
-			auto m = std::make_shared<std::mutex>();
-			auto cv = std::make_shared<std::condition_variable>();
-			tasks->AddTask([=]() {
+			// The task runs under the lock the caller takes on timeout, and not at all once the caller has given up: the
+			// lambdas passed here capture the caller's locals by reference, which are gone after a timeout.
+			struct Shared
+			{
+				std::mutex m;
+				std::condition_variable cv;
+				bool done = false;
+				bool cancelled = false;
+			};
+			auto st = std::make_shared<Shared>();
+			tasks->AddTask([st, a_fn]() {
+				std::scoped_lock l(st->m);
+				if (st->cancelled) { return; }
 				a_fn();
-				{
-					std::scoped_lock l(*m);
-					done->store(true);
-				}
-				cv->notify_all();
+				st->done = true;
+				st->cv.notify_all();
 			});
-			std::unique_lock l(*m);
-			return cv->wait_for(l, std::chrono::milliseconds(a_timeoutMs), [&]() { return done->load(); });
+			std::unique_lock l(st->m);
+			if (st->cv.wait_for(l, std::chrono::milliseconds(a_timeoutMs), [&]() { return st->done; })) { return true; }
+			st->cancelled = true;
+			return false;
 		}
 
 		std::string StateJson()

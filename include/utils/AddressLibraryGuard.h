@@ -91,6 +91,31 @@ namespace AddressLibraryGuard
 	// returns false so the caller can load inert. Never resolves an address itself.
 	inline bool Guard(const char* a_modName)
 	{
+		// A build line only reads its own games' Address Library. CommonLibSSE-NG 3.7 (the SE/AE 1.6 line) takes Skyrim
+		// 1.7.x for SE and asks for version-1-7-104-0.bin, a file that never exists, so a player on 1.7 who installed the
+		// 1.6 build was told to install a file nobody ships (Back Pocket bug report, 2026-10-02). Name the real fix: the
+		// other build in the installer.
+		{
+			const auto v = REL::Module::get().version();
+#if defined(RUNTIME_LINE) && RUNTIME_LINE == 17
+			const bool wrongLine = v < REL::Version(1, 7, 0, 0);
+			const char* have = "Skyrim 1.7.x";
+			const char* want = "Skyrim SE 1.5.97";          // the installer option's label starts with this
+#else
+			const bool wrongLine = v >= REL::Version(1, 7, 0, 0);
+			const char* have = "Skyrim SE 1.5.97 / AE 1.6";
+			const char* want = "Skyrim 1.7.99 / 1.7.104";   // the installer option's label starts with this
+#endif
+			if (wrongLine) {
+				const std::string text = std::format(
+					"{} cannot start: this is the {} build, and the game is {}.\n\n"
+					"Reinstall the mod and pick the \"{}...\" option in its installer. The plugin has loaded inert; the game continues.",
+					a_modName, have, v.string("."), want);
+				logger::critical("[AddressLibrary] {}", text);
+				MessageBoxA(nullptr, text.c_str(), a_modName, MB_OK | MB_ICONERROR | MB_SETFOREGROUND);
+				return false;
+			}
+		}
 		const Report r = Check();
 		logger::info("[AddressLibrary] runtime {} ({}) read from \"{}\"; will open \"{}\" relative to \"{}\": {}{}{}",
 			r.runtime, r.edition, r.exe, r.file, r.cwd, r.existsAtCwd ? "present" : "MISSING", r.simulated ? " (SIMULATED by environment variable)" : "",

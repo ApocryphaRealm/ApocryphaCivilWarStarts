@@ -9,6 +9,14 @@
   single DLL got "failed to open address library file" at load (Adagium721's report, 2026-09-21).
   Everything else - the plugin, the INI, the Alternate Perspective registration - is shared and unchanged.
 
+### Changed
+- **No in-game menu page.** The page in the Apocrypha Menu Framework is gone; the mod simply adds the two starts
+  (the owner, 2026-10-02: Alternate Perspective mods "should just be a simple mod that adds what is intended and not
+  an AMF page"). Every setting is still in `CivilWarStarts.ini` and is read the same way.
+- **The installer's other build is named when the wrong one is installed.** The SE/AE 1.6 DLL on Skyrim 1.7.x (or the
+  1.7 DLL on SE/AE 1.6) now says which build it is and to pick the other installer option, and loads inert - instead
+  of asking for an Address Library file that does not exist (`version-1-7-104-0.bin`).
+
 ## 1.0.4 - 2026-09-18 - untested
 
 ### Changed

@@ -47,6 +47,24 @@ namespace starts
 		{ 0x006158, "NW_Sons_of_Skyrim.esp", "Nord Heavy War Axe", true },
 	};
 
+	// Civil War Guard Armor Replacer (the author's own all-in-one) merges Sons of Skyrim, New Legion, Guards Armor
+	// Replacer and Imperial Tribune Armor into ONE light plugin, so the Windhelm kit above exists there under
+	// DIFFERENT FormIDs and the Sons of Skyrim check cannot see it. These are the same six pieces, matched to the
+	// Sons of Skyrim kit by EditorID (0_Windhelm_Armor_Heavy, 0_Boots_Lamellar_Heavy, 0_Gauntlets_Lamellar_Heavy,
+	// 0_Windhelm_Helmet, 0_Windhelm_Shield_1, 0_WarAxe_Nord_Heavy) and read out of that plugin on 2026-10-19 - local
+	// FormIDs inside a light plugin, resolved by plugin name at runtime. The replacer is not published yet, so every
+	// piece is checked by NAME when the start runs (KitSource::verifyNames): a piece that is missing or called something
+	// else means the plugin has moved on, and the start falls through to the next source instead of giving wrong gear.
+	// Checked BEFORE Sons of Skyrim because the merge supersedes it.
+	inline constexpr Item kStormcloakKitReplacer[] = {
+		{ 0x000804, "Civil War Guard Armor Replacer.esp", "Windhelm Heavy Armor", true },
+		{ 0x000819, "Civil War Guard Armor Replacer.esp", "Lamellar Heavy Boots", true },
+		{ 0x00081C, "Civil War Guard Armor Replacer.esp", "Lamellar Heavy Gauntlets", true },
+		{ 0x00085A, "Civil War Guard Armor Replacer.esp", "Windhelm Helmet", true },
+		{ 0x00085E, "Civil War Guard Armor Replacer.esp", "Windhelm Shield", true },
+		{ 0x000898, "Civil War Guard Armor Replacer.esp", "Nord Heavy War Axe", true },
+	};
+
 	// Without Sons of Skyrim there is no heavy Stormcloak armour in the game, so the fallback is the
 	// vanilla Stormcloak uniform - but still with an axe and a shield, because that is the loadout that
 	// was asked for and vanilla does have both.
@@ -72,6 +90,18 @@ namespace starts
 		{ 0x000135B8, nullptr, "Imperial Sword", true },
 	};
 
+	// One place a side's kit can come from. The first source whose plugin is loaded (and, when verifyNames is set,
+	// whose pieces all resolve under their expected names) is the kit; a source with no plugin is always available,
+	// so the last source is the game's own gear and the mod never hands out nothing and never requires another mod.
+	struct KitSource
+	{
+		const char* plugin;      // null when the kit needs nothing
+		const char* pluginName;  // how to say it to a player
+		const Item* items;
+		std::size_t count;
+		bool verifyNames;        // check every piece by name before trusting the source
+	};
+
 	struct Side
 	{
 		const char* key;   // what the DevBench tool and the log call it
@@ -90,14 +120,23 @@ namespace starts
 		std::uint16_t civilWarStage;
 		const char* civilWarDescription;
 
-		// The kit this side would rather have, and the plugin it needs. When that plugin is not loaded
-		// the fallback is used instead - so the mod never requires it and never hands out nothing.
-		const Item* kit;
-		std::size_t kitCount;
-		const char* kitPlugin;         // null when the preferred kit needs nothing
-		const char* kitPluginName;     // how to say it to a player
-		const Item* fallbackKit;
-		std::size_t fallbackKitCount;
+		// The kit sources in order of preference; the last one needs no other mod.
+		const KitSource* sources;
+		std::size_t sourceCount;
+	};
+
+	inline constexpr KitSource kStormcloakSources[] = {
+		{ "Civil War Guard Armor Replacer.esp", "Civil War Guard Armor Replacer", kStormcloakKitReplacer, std::size(kStormcloakKitReplacer), true },
+		{ "NW_Sons_of_Skyrim.esp", "Sons of Skyrim", kStormcloakKitSonsOfSkyrim, std::size(kStormcloakKitSonsOfSkyrim), false },
+		{ nullptr, nullptr, kStormcloakKitVanilla, std::size(kStormcloakKitVanilla), false },
+	};
+
+	// The Imperial pieces are vanilla records. Civil War Guard Armor Replacer overrides every one of them with New
+	// Legion's Legion art (checked 2026-10-19: ArmorImperialCuirass, Boots, Gauntlets, Helmet, Shield and
+	// Imperialsword all carry its armatures), so a player with the replacer already wears its Legion set from this
+	// same list - no separate source is needed.
+	inline constexpr KitSource kImperialSources[] = {
+		{ nullptr, nullptr, kImperialKit, std::size(kImperialKit), false },
 	};
 
 	inline constexpr Side kSides[] = {
@@ -106,20 +145,27 @@ namespace starts
 			0x800,
 			0x000422BA, "the war room of the Palace of the Kings, Windhelm",  // CWSonsFactionHQMarker
 			0x000E2D29, 1, "CW01B (Joining the Stormcloaks)",
-			kStormcloakKitSonsOfSkyrim, std::size(kStormcloakKitSonsOfSkyrim),
-			"NW_Sons_of_Skyrim.esp", "Sons of Skyrim",
-			kStormcloakKitVanilla, std::size(kStormcloakKitVanilla),
+			kStormcloakSources, std::size(kStormcloakSources),
 		},
 		{
 			"imperial", "Imperial Recruit",
 			0x801,
 			0x000422B8, "the war room of Castle Dour, Solitude",  // CWImperialFactionHQMarker
 			0x000D517A, 1, "CW01A (Joining the Legion)",
-			kImperialKit, std::size(kImperialKit),
-			nullptr, nullptr,
-			kImperialKit, std::size(kImperialKit),
+			kImperialSources, std::size(kImperialSources),
 		},
 	};
 
 	inline constexpr std::size_t kSideCount = std::size(kSides);
+
+	// The longest kit any source of any side can hand over - the staged start wears one piece per frame beat.
+	constexpr std::size_t MaxKitCount()
+	{
+		std::size_t most = 0;
+		for (const auto& side : kSides)
+		{
+			for (std::size_t i = 0; i < side.sourceCount; ++i) { if (side.sources[i].count > most) { most = side.sources[i].count; } }
+		}
+		return most;
+	}
 }

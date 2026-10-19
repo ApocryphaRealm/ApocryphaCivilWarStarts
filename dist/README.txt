@@ -1,6 +1,6 @@
 Alternate Perspective Civil War Starts
 ========================================
-Version 1.0.3
+Version 1.0.7
 
 An add-on for Alternate Perspective. It adds a "Civil War" card to the menu the Messenger offers you
 in the Resting Pilgrim, with two starts under it:
@@ -15,6 +15,11 @@ Galmar Stone-Fist or Legate Rikke is waiting to put you to the test, exactly as 
 
 Nothing is skipped ahead. The mod starts the recruitment quest at its own opening stage, so the oath,
 the officer's test and everything after it happen in game as they always do.
+
+The uniform follows what you have installed. The Stormcloak recruit wears the Windhelm heavy set - armour,
+boots, gauntlets, helmet and shield, with a Nord war axe - from Civil War Guard Armor Replacer when it is
+loaded, otherwise from Sons of Skyrim, otherwise the game's own Stormcloak gear. The Imperial recruit wears
+the Legion set, which Civil War Guard Armor Replacer reskins with New Legion's armour when it is loaded.
 
 
 WHAT IS IN THE PACKAGE
@@ -78,6 +83,11 @@ IF SOMETHING GOES WRONG
 
 WHAT CHANGED
 ------------
+Version 1.0.7
+The Stormcloak start takes its uniform from Civil War Guard Armor Replacer when that mod is loaded (its
+Windhelm heavy set), then from Sons of Skyrim, then from the game's own gear. Each piece of the
+replacer's set is checked by name first; if the plugin has changed, the next choice is used instead.
+
 Version 1.0.6
 The log ships at info. For a bug report, set uLogLevel=0 in the INI.
 

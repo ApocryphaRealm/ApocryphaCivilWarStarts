@@ -12,6 +12,7 @@
 #include <chrono>
 #include <format>
 #include <mutex>
+#include <string_view>
 #include <thread>
 #include <vector>
 
@@ -78,27 +79,56 @@ namespace start
 			return form ? form->As<RE::TESBoundObject>() : nullptr;
 		}
 
-		// Which kit this side actually gets. The preferred one needs another mod; without it the fallback
-		// is used, so the mod never requires that mod and never hands out an empty set.
+		// A source that names its pieces (the replacer, whose plugin is not final yet) is only trusted when every piece
+		// resolves AND carries the name we expect - a moved FormID would otherwise hand out some other record.
+		bool SourceIsSound(const starts::KitSource& a_source)
+		{
+			for (std::size_t i = 0; i < a_source.count; ++i)
+			{
+				const auto& item = a_source.items[i];
+				auto* object = KitObject(item);
+				const char* name = object ? object->GetName() : nullptr;
+				if (!object || !name || std::string_view(name) != item.name)
+				{
+					logger::warn("kit: {} - expected \"{}\" at {:06X} but found {}; the plugin has changed since this list was read, so its gear is not used",
+								 a_source.pluginName, item.name, item.formID, object ? (name ? name : "(no name)") : "nothing");
+					return false;
+				}
+			}
+			return true;
+		}
+
+		// Which kit this side actually gets: the first source, in the order the side lists them, whose plugin is loaded (and
+		// sound). The last source needs no other mod, so the mod never requires one and never hands out an empty set.
 		void ChooseKit(const starts::Side& a_side, const starts::Item*& a_kit, std::size_t& a_count)
 		{
-			a_kit = a_side.fallbackKit;
-			a_count = a_side.fallbackKitCount;
-			if (!a_side.kitPlugin) { a_kit = a_side.kit; a_count = a_side.kitCount; return; }
-
 			auto* handler = RE::TESDataHandler::GetSingleton();
-			const bool present = handler && handler->LookupModByName(a_side.kitPlugin) != nullptr;
-			if (present)
+			for (std::size_t i = 0; i < a_side.sourceCount; ++i)
 			{
-				a_kit = a_side.kit;
-				a_count = a_side.kitCount;
-				logger::info("kit: {} is installed, so the {} start uses its gear", a_side.kitPluginName, a_side.key);
+				const auto& source = a_side.sources[i];
+				if (source.plugin)
+				{
+					const bool present = handler && handler->LookupModByName(source.plugin) != nullptr;
+					if (!present)
+					{
+						logger::info("kit: {} is not installed", source.pluginName);
+						continue;
+					}
+					if (source.verifyNames && !SourceIsSound(source)) { continue; }
+					logger::info("kit: {} is installed, so the {} start uses its gear", source.pluginName, a_side.key);
+				}
+				else
+				{
+					logger::info("kit: no kit mod is installed for the {} start, so it uses the game's own gear", a_side.key);
+				}
+				a_kit = source.items;
+				a_count = source.count;
+				return;
 			}
-			else
-			{
-				logger::info("kit: {} is not installed, so the {} start falls back to the game's own gear",
-							 a_side.kitPluginName, a_side.key);
-			}
+			// Every source failed - cannot happen while the last one has no plugin, but never leave the kit empty.
+			const auto& last = a_side.sources[a_side.sourceCount - 1];
+			a_kit = last.items;
+			a_count = last.count;
 		}
 
 		bool MovePlayer(const starts::Side& a_side, RE::PlayerCharacter* a_player, std::string& a_problem)
@@ -293,7 +323,7 @@ namespace start
 			const auto& side = starts::kSides[a_side];
 			auto* player = RE::PlayerCharacter::GetSingleton();
 			const std::size_t wearFirst = 3;
-			const std::size_t wearLast = wearFirst + std::max(side.kitCount, side.fallbackKitCount);  // one past the last wear step
+			const std::size_t wearLast = wearFirst + starts::MaxKitCount();  // one past the last wear step
 
 			// Step 0: are they there yet? Checked, not timed - a teleport takes as long as it takes, and on
 			// a slow load a timer hands somebody a uniform while they are still watching a loading screen.

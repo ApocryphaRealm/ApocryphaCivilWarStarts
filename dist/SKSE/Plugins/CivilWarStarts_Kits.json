@@ -1,0 +1,100 @@
+{
+  "comment": [
+    "Alternate Perspective Civil War Starts - which armour mod each start takes its uniform from.",
+    "",
+    "Each side lists its SOURCES in the order they are tried, top to bottom. The first source that works is the uniform.",
+    "A source works when one of its plugins is loaded AND every piece that is not marked optional is found in the game under",
+    "the name written here. Otherwise the log (CivilWarStarts.log) says why, and the next source is tried. The last source",
+    "names no plugin: it is the game's own gear, so a start never hands out nothing and never needs another mod.",
+    "",
+    "To reorder: move a source block up or down. To switch one off: delete its block. To add a mod: copy a block, change the",
+    "plugin file name or names, and the pieces. A piece is {slot, form, name}. 'form' is the plugin's FormID with the load-order",
+    "digits left off (the last six hex digits as xEdit shows them, so 05000804 is written 0x000804), 'name' is the item's",
+    "name exactly as the game shows it, and 'slot' is a word for the log. Add \"optional\": true to a piece the uniform can",
+    "go without - a mod with no shield works if the shield is optional. The number of pieces is not fixed.",
+    "A source with no plugin takes whole FormIDs from the game's own files and does not check the names, because armour mods",
+    "that replace the game's gear change those names on purpose.",
+    "If this file is missing or has a typo, the mod logs the line and column and uses the lists built into the DLL instead.",
+    "",
+    "A mod that only REPLACES the game's own armour records needs no block: the game's own FormIDs at the bottom of each side",
+    "already show its look. Checked by reading each mod's plugin (2026-10-19):",
+    "  New Legion (Nexus 30468, DIS_Heavy_Legion.esp) and Heavy Legion (22877, HeavyLegion.esp) replace all six Imperial pieces",
+    "  used below, so the Imperial start wears their Legion set with no entry. Civil War Guard Armor Replacer does the same with",
+    "  New Legion's armatures. Imperial Armors and Weapons Retexture and other asset-only mods change no record at all."
+  ],
+  "version": 1,
+
+  "stormcloak": [
+    {
+      "id": "cwgar",
+      "label": "Civil War Guard Armor Replacer",
+      "plugins": ["Civil War Guard Armor Replacer.esp"],
+      "comment": "Not published yet. Its light plugin merges Sons of Skyrim, New Legion, Guards Armor Replacer and Imperial Tribune Armor, so its Windhelm set has FormIDs of its own.",
+      "pieces": [
+        { "slot": "body",      "form": "0x000804", "name": "Windhelm Heavy Armor" },
+        { "slot": "boots",     "form": "0x000819", "name": "Lamellar Heavy Boots" },
+        { "slot": "gauntlets", "form": "0x00081C", "name": "Lamellar Heavy Gauntlets" },
+        { "slot": "helmet",    "form": "0x00085A", "name": "Windhelm Helmet" },
+        { "slot": "shield",    "form": "0x00085E", "name": "Windhelm Shield" },
+        { "slot": "weapon",    "form": "0x000898", "name": "Nord Heavy War Axe" }
+      ]
+    },
+    {
+      "id": "sons",
+      "label": "Sons of Skyrim",
+      "plugins": ["NW_Sons_of_Skyrim.esp"],
+      "comment": "Nexus 68656, version 2.0 and Xtudo's patched copies of it (same plugin). Each hold has its own kit; the Windhelm kit suits the Windhelm war room.",
+      "pieces": [
+        { "slot": "body",      "form": "0x004A9E", "name": "Windhelm Heavy Armor" },
+        { "slot": "boots",     "form": "0x004AC8", "name": "Lamellar Heavy Boots" },
+        { "slot": "gauntlets", "form": "0x004ACE", "name": "Lamellar Heavy Gauntlets" },
+        { "slot": "helmet",    "form": "0x006117", "name": "Windhelm Helmet" },
+        { "slot": "shield",    "form": "0x006122", "name": "Windhelm Shield" },
+        { "slot": "weapon",    "form": "0x006158", "name": "Nord Heavy War Axe" }
+      ]
+    },
+    {
+      "id": "gar",
+      "label": "Guards Armor Replacer",
+      "plugins": ["Guards_Armor_Replacer.esp", "Guards Armor Replacer.esp"],
+      "comment": "Nexus 22671, version 5.5a. It also replaces the game's Stormcloak cuirass and helmet, but its own Eastmarch rebel set is a fuller uniform. The 'Minimal ESP' download has no weapon records, so it falls through to the next source.",
+      "pieces": [
+        { "slot": "body",      "form": "0x003E9F", "name": "Eastmarch Rebel's Armor" },
+        { "slot": "boots",     "form": "0x003EB9", "name": "Northerner Boots" },
+        { "slot": "gauntlets", "form": "0x003EBD", "name": "Gauntlets of Iron" },
+        { "slot": "helmet",    "form": "0x003EB5", "name": "Heavy Rebel's Helmet" },
+        { "slot": "shield",    "form": "0x003EBF", "name": "Rebel's Shield" },
+        { "slot": "weapon",    "form": "0x002E23", "name": "Northerner War Axe" }
+      ]
+    },
+    {
+      "id": "vanilla",
+      "label": "the game's own Stormcloak gear",
+      "comment": "No plugin: whole FormIDs in Skyrim.esm. The names are for the log only; Guards Armor Replacer and others rename these records on purpose.",
+      "pieces": [
+        { "slot": "body",      "form": "0x00A6D7B", "name": "Stormcloak Cuirass" },
+        { "slot": "boots",     "form": "0x00A6D7F", "name": "Stormcloak Boots" },
+        { "slot": "gauntlets", "form": "0x00A6D7D", "name": "Stormcloak Gauntlets" },
+        { "slot": "helmet",    "form": "0x00A6D79", "name": "Stormcloak Helmet" },
+        { "slot": "shield",    "form": "0x0012EB6", "name": "Iron Shield" },
+        { "slot": "weapon",    "form": "0x0013790", "name": "Iron War Axe" }
+      ]
+    }
+  ],
+
+  "imperial": [
+    {
+      "id": "vanilla",
+      "label": "the game's own Legion gear",
+      "comment": "No plugin: whole FormIDs in Skyrim.esm. New Legion, Heavy Legion and Civil War Guard Armor Replacer replace exactly these six records, so with any of them loaded this IS their Legion set - which is why they have no block of their own.",
+      "pieces": [
+        { "slot": "body",      "form": "0x00136D5", "name": "Imperial Armor" },
+        { "slot": "boots",     "form": "0x00136D6", "name": "Imperial Boots" },
+        { "slot": "gauntlets", "form": "0x00136D4", "name": "Imperial Gauntlets" },
+        { "slot": "helmet",    "form": "0x0013EDC", "name": "Imperial Helmet" },
+        { "slot": "shield",    "form": "0x00135BA", "name": "Imperial Shield" },
+        { "slot": "weapon",    "form": "0x00135B8", "name": "Imperial Sword" }
+      ]
+    }
+  ]
+}

@@ -2,6 +2,7 @@
 
 #include "Start.h"
 
+#include "Kits.h"
 #include "Settings.h"
 #include "Starts.h"
 #include "utils/Logger.h"
@@ -60,77 +61,6 @@ namespace start
 			return RE::TESForm::LookupByID<T>(a_id);
 		}
 
-		// A kit item, resolved. A piece from another mod is looked up by PLUGIN and local FormID, never by
-		// a baked full FormID - the plugin's index depends on where the player's load order puts it.
-		RE::TESBoundObject* KitObject(const starts::Item& a_item)
-		{
-			if (!a_item.plugin) { return Vanilla<RE::TESBoundObject>(a_item.formID); }
-			auto* handler = RE::TESDataHandler::GetSingleton();
-			if (!handler) { return nullptr; }
-
-			// The UNTEMPLATED LookupForm, then As<>. TESDataHandler::LookupForm<T> tests
-			// form->Is(T::FORMTYPE) - an EXACT type match - so asking it for a TESBoundObject, which is a
-			// base class and not a form type anything actually is, returns null for every armour and weapon
-			// in the game. It compiles, and it silently finds nothing: the first build using it reported all
-			// six Sons of Skyrim pieces "not in the game" while the plugin was plainly loaded (2026-09-16).
-			// TESForm::LookupByID<T> does NOT behave this way - it uses As<T>(), which walks the hierarchy -
-			// which is why the vanilla half of the same kit worked and hid the fault.
-			auto* form = handler->LookupForm(a_item.formID, a_item.plugin);
-			return form ? form->As<RE::TESBoundObject>() : nullptr;
-		}
-
-		// A source that names its pieces (the replacer, whose plugin is not final yet) is only trusted when every piece
-		// resolves AND carries the name we expect - a moved FormID would otherwise hand out some other record.
-		bool SourceIsSound(const starts::KitSource& a_source)
-		{
-			for (std::size_t i = 0; i < a_source.count; ++i)
-			{
-				const auto& item = a_source.items[i];
-				auto* object = KitObject(item);
-				const char* name = object ? object->GetName() : nullptr;
-				if (!object || !name || std::string_view(name) != item.name)
-				{
-					logger::warn("kit: {} - expected \"{}\" at {:06X} but found {}; the plugin has changed since this list was read, so its gear is not used",
-								 a_source.pluginName, item.name, item.formID, object ? (name ? name : "(no name)") : "nothing");
-					return false;
-				}
-			}
-			return true;
-		}
-
-		// Which kit this side actually gets: the first source, in the order the side lists them, whose plugin is loaded (and
-		// sound). The last source needs no other mod, so the mod never requires one and never hands out an empty set.
-		void ChooseKit(const starts::Side& a_side, const starts::Item*& a_kit, std::size_t& a_count)
-		{
-			auto* handler = RE::TESDataHandler::GetSingleton();
-			for (std::size_t i = 0; i < a_side.sourceCount; ++i)
-			{
-				const auto& source = a_side.sources[i];
-				if (source.plugin)
-				{
-					const bool present = handler && handler->LookupModByName(source.plugin) != nullptr;
-					if (!present)
-					{
-						logger::info("kit: {} is not installed", source.pluginName);
-						continue;
-					}
-					if (source.verifyNames && !SourceIsSound(source)) { continue; }
-					logger::info("kit: {} is installed, so the {} start uses its gear", source.pluginName, a_side.key);
-				}
-				else
-				{
-					logger::info("kit: no kit mod is installed for the {} start, so it uses the game's own gear", a_side.key);
-				}
-				a_kit = source.items;
-				a_count = source.count;
-				return;
-			}
-			// Every source failed - cannot happen while the last one has no plugin, but never leave the kit empty.
-			const auto& last = a_side.sources[a_side.sourceCount - 1];
-			a_kit = last.items;
-			a_count = last.count;
-		}
-
 		bool MovePlayer(const starts::Side& a_side, RE::PlayerCharacter* a_player, std::string& a_problem)
 		{
 			auto* marker = Vanilla<RE::TESObjectREFR>(a_side.arrivalMarker);
@@ -148,33 +78,16 @@ namespace start
 		}
 
 		// Handing the set over and wearing it are two separate steps, and they do not share a frame - see
-		// the staged sequence in RunStaged below for why. This one only puts the items in the pack.
-		std::vector<RE::TESBoundObject*> GiveKit(const starts::Item* a_kit, std::size_t a_count,
-												 RE::PlayerCharacter* a_player, int& a_given, std::string& a_problem)
+		// the staged sequence in RunStaged below for why. This one only puts the items in the pack. Every piece in the
+		// choice already resolved (kits::Choose drops one that did not), so none is missing here.
+		void GiveKit(const kits::Choice& a_choice, RE::PlayerCharacter* a_player, int& a_given)
 		{
-			std::vector<RE::TESBoundObject*> given;
-			given.reserve(a_count);
-
-			for (std::size_t i = 0; i < a_count; ++i)
+			for (const auto& piece : a_choice.pieces)
 			{
-				const auto& item = a_kit[i];
-				auto* object = KitObject(item);
-				if (!object)
-				{
-					// One missing record is worth saying out loud but is not worth abandoning the rest of the
-					// kit for - the player would rather arrive in three pieces of armour than none.
-					logger::error("kit: {} ({:08X}) is not in the game; skipped", item.name, item.formID);
-					if (a_problem.empty()) { a_problem = std::format("{} is missing from the game", item.name); }
-					given.push_back(nullptr);
-					continue;
-				}
-				a_player->AddObjectToContainer(object, nullptr, 1, nullptr);
+				a_player->AddObjectToContainer(piece.object, nullptr, 1, nullptr);
 				++a_given;
-				given.push_back(object);
-				logger::debug("kit: gave {} ({:08X})", item.name, item.formID);
+				logger::debug("kit: gave {} ({}, {:06X})", piece.name, piece.slot, piece.formID);
 			}
-
-			return given;
 		}
 
 		// One piece, worn normally - and NOT forced.
@@ -303,9 +216,10 @@ namespace start
 		void QueueStep(std::size_t a_side, std::string a_reason, std::size_t a_step);
 
 		// Filled by the first step, read by the ones after it. Only ever touched on the main thread.
-		std::vector<RE::TESBoundObject*> g_given;
-		const starts::Item* g_kit = nullptr;
-		std::size_t g_kitCount = 0;
+		kits::Choice g_choice;
+		// One past the last wear step: the staged start wears one piece per frame beat, so how many steps there are depends
+		// on how many pieces the chosen source has. Set when the kit is chosen.
+		std::size_t g_wearLast = 3;
 
 		// How many times the arrival step looks before giving up and carrying on anyway.
 		inline constexpr int kArrivalLooks = 40;
@@ -323,7 +237,6 @@ namespace start
 			const auto& side = starts::kSides[a_side];
 			auto* player = RE::PlayerCharacter::GetSingleton();
 			const std::size_t wearFirst = 3;
-			const std::size_t wearLast = wearFirst + starts::MaxKitCount();  // one past the last wear step
 
 			// Step 0: are they there yet? Checked, not timed - a teleport takes as long as it takes, and on
 			// a slow load a timer hands somebody a uniform while they are still watching a loading screen.
@@ -358,28 +271,29 @@ namespace start
 			// Step 2: the pack.
 			if (a_step == 2)
 			{
-				g_given.clear();
-				g_kit = nullptr;
-				g_kitCount = 0;
+				g_choice = kits::Choice{};
 				if (player && settings::start::giveStarterEquipment)
 				{
-					ChooseKit(side, g_kit, g_kitCount);
+					g_choice = kits::Choose(a_side, false);
 					std::scoped_lock l(g_lock);
-					g_given = GiveKit(g_kit, g_kitCount, player, g_report.itemsGiven, g_report.problem);
+					g_report.kitSource = g_choice.sourceId;
+					GiveKit(g_choice, player, g_report.itemsGiven);
+					if (g_choice.pieces.empty() && g_report.problem.empty()) { g_report.problem = "no piece of the uniform was found in the game"; }
 				}
 				else
 				{
 					logger::info("kit: skipped (bGiveStarterEquipment=0)");
 				}
-				QueueStep(a_side, a_reason, settings::start::equipStarterEquipment ? wearFirst : wearLast);
+				g_wearLast = wearFirst + g_choice.pieces.size();
+				QueueStep(a_side, a_reason, settings::start::equipStarterEquipment ? wearFirst : g_wearLast);
 				return;
 			}
 
-			if (a_step >= wearFirst && a_step < wearLast)
+			if (a_step >= wearFirst && a_step < g_wearLast)
 			{
 				const std::size_t i = a_step - wearFirst;
-				if (player && g_kit && i < g_kitCount && i < g_given.size() && g_given[i] && g_kit[i].equip &&
-					WearOne(player, g_given[i], g_kit[i].name))
+				if (player && i < g_choice.pieces.size() && g_choice.pieces[i].object &&
+					WearOne(player, g_choice.pieces[i].object, g_choice.pieces[i].name.c_str()))
 				{
 					std::scoped_lock l(g_lock);
 					++g_report.itemsEquipped;
@@ -403,9 +317,9 @@ namespace start
 			}
 
 			std::scoped_lock l(g_lock);
-			logger::info("start ({}, {}): finished - moved={} given={} worn={} questline={}{}",
+			logger::info("start ({}, {}): finished - moved={} given={} worn={} questline={} kit={}{}",
 						 side.key, a_reason, g_report.moved, g_report.itemsGiven, g_report.itemsEquipped,
-						 g_report.questStarted,
+						 g_report.questStarted, g_report.kitSource.empty() ? "-" : g_report.kitSource,
 						 g_report.problem.empty() ? "" : std::format(" (problem: {})", g_report.problem));
 		}
 
@@ -460,6 +374,9 @@ namespace start
 	void Install()
 	{
 		if (g_installed.exchange(true)) { return; }
+
+		// The uniform lists are read now, once the data is loaded and the log can say which file or table is in use.
+		kits::Load();
 
 		int found = 0;
 		for (std::size_t side = 0; side < starts::kSideCount; ++side)
@@ -590,10 +507,10 @@ namespace start
 
 		return std::format(
 			"\"chosen\":{},\"lastRun\":{{\"ran\":{},\"side\":\"{}\",\"reason\":\"{}\",\"moved\":{},"
-			"\"itemsGiven\":{},\"itemsEquipped\":{},\"questStarted\":{},\"problem\":\"{}\"}},\"sides\":[{}]",
+			"\"itemsGiven\":{},\"itemsEquipped\":{},\"questStarted\":{},\"kitSource\":\"{}\",\"problem\":\"{}\"}},\"sides\":[{}]",
 			g_chosen.load() ? "true" : "false", g_report.ran ? "true" : "false",
 			g_report.ran ? starts::kSides[g_report.side].key : "", JsonText(g_report.reason),
 			g_report.moved ? "true" : "false", g_report.itemsGiven, g_report.itemsEquipped,
-			g_report.questStarted ? "true" : "false", JsonText(g_report.problem), sides);
+			g_report.questStarted ? "true" : "false", JsonText(g_report.kitSource), JsonText(g_report.problem), sides);
 	}
 }

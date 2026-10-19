@@ -5,6 +5,11 @@
 // THE WHOLE MOD IS THIS TABLE PLUS THE CODE THAT READS IT. Both sides are one mod, one plugin and one
 // DLL; a side is a row here, and adding another one would be a row and a quest record, nothing else.
 //
+// THE UNIFORM LISTS BELOW ARE ONLY THE FALLBACK (1.0.7). The lists the mod actually uses are read from
+// Data/SKSE/Plugins/CivilWarStarts_Kits.json (Kits.h): that file is where a supported armour mod is added, removed or
+// reordered, with no rebuild. This compiled copy is what the start uses when that file is missing or broken, so it
+// carries the sources the mod has always had (Civil War Guard Armor Replacer, Sons of Skyrim, the game's own gear).
+//
 // Every FormID below was read out of the game's own Skyrim.esm on 2026-09-16 rather than recalled.
 // The arrival markers were confirmed to be persistent XMarkers standing on the floor of the cell named
 // beside them - deliberately the FACTION HQ markers rather than the map-table floor markers, because
@@ -90,8 +95,8 @@ namespace starts
 		{ 0x000135B8, nullptr, "Imperial Sword", true },
 	};
 
-	// One place a side's kit can come from. The first source whose plugin is loaded (and, when verifyNames is set,
-	// whose pieces all resolve under their expected names) is the kit; a source with no plugin is always available,
+	// One place a side's kit can come from. The first source whose plugin is loaded (and whose pieces all
+	// resolve under their expected names) is the kit; a source with no plugin is always available,
 	// so the last source is the game's own gear and the mod never hands out nothing and never requires another mod.
 	struct KitSource
 	{
@@ -99,7 +104,7 @@ namespace starts
 		const char* pluginName;  // how to say it to a player
 		const Item* items;
 		std::size_t count;
-		bool verifyNames;        // check every piece by name before trusting the source
+		bool verifyNames;        // no longer read: every source that names a plugin is name-checked (Kits.cpp)
 	};
 
 	struct Side
@@ -157,15 +162,4 @@ namespace starts
 	};
 
 	inline constexpr std::size_t kSideCount = std::size(kSides);
-
-	// The longest kit any source of any side can hand over - the staged start wears one piece per frame beat.
-	constexpr std::size_t MaxKitCount()
-	{
-		std::size_t most = 0;
-		for (const auto& side : kSides)
-		{
-			for (std::size_t i = 0; i < side.sourceCount; ++i) { if (side.sources[i].count > most) { most = side.sources[i].count; } }
-		}
-		return most;
-	}
 }

@@ -40,6 +40,7 @@ namespace start
 		int itemsGiven = 0;
 		int itemsEquipped = 0;
 		bool questStarted = false;
+		std::string kitSource;  // the id of the kit source that supplied the uniform (see Kits.h)
 		std::string problem;  // empty when everything asked for actually happened
 	};
 

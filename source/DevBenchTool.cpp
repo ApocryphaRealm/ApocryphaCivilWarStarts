@@ -3,6 +3,7 @@
 #include "DevBenchTool.h"
 
 #include "DevBench/DevBenchAPI.h"
+#include "Kits.h"
 #include "Settings.h"
 #include "Start.h"
 #include "Starts.h"
@@ -134,9 +135,25 @@ namespace DevBenchTool
 			}
 			if (op == "reload")
 			{
-				bool ok = false;
-				RunOnMainThread([&]() { ok = settings::Reload(); });
-				a_write(a_sink, std::format("{{\"ok\":{},\"op\":\"reload\"}}", ok ? "true" : "false").c_str());
+				// The INI and the uniform lists (CivilWarStarts_Kits.json). Both are re-read; "kitsFile" says whether the
+				// JSON was used (false = missing or broken, the built-in table is in use).
+				auto ok = std::make_shared<std::atomic<bool>>(false);
+				auto kitsFile = std::make_shared<std::atomic<bool>>(false);
+				RunOnMainThread([ok, kitsFile]() { ok->store(settings::Reload()); kitsFile->store(kits::Load()); });
+				a_write(a_sink, std::format("{{\"ok\":{},\"op\":\"reload\",\"kitsFile\":{}}}", ok->load() ? "true" : "false", kitsFile->load() ? "true" : "false").c_str());
+				return;
+			}
+			if (op == "kits")
+			{
+				// What each side would be handed right now, and why every earlier source lost. Reads the running game, so it
+				// runs on the game thread; it writes nothing to the log.
+				auto json = std::make_shared<std::string>();
+				if (!RunOnMainThread([json]() { *json = kits::DescribeJson(); }))
+				{
+					a_write(a_sink, R"({"ok":false,"op":"kits","error":"main thread did not run the task in time"})");
+					return;
+				}
+				a_write(a_sink, std::format("{{\"ok\":true,\"op\":\"kits\",{}}}", *json).c_str());
 				return;
 			}
 			if (op == "save")
@@ -198,7 +215,9 @@ namespace DevBenchTool
 			"player to that side's war room, give and wear that side's uniform, and start CW01B or CW01A - without "
 			"going through Alternate Perspective's menu. op=set with name (enabled, moveToWarRoom, "
 			"giveStarterEquipment, equipStarterEquipment, startCivilWarQuest, startDelaySeconds) and value: change "
-			"one setting for this session. op=save writes the settings to the INI; op=reload re-reads it.\","
+			"one setting for this session. op=save writes the settings to the INI; op=reload re-reads the INI and the uniform "
+			"lists (CivilWarStarts_Kits.json). op=kits: for each side, which kit source would be chosen now and why each earlier "
+			"source was passed over.\","
 			"\"inputSchema\":{\"type\":\"object\",\"properties\":{\"op\":{\"type\":\"string\"},\"side\":{\"type\":\"string\"},\"name\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}}},"
 			"\"readOnly\":false"
 			"}";

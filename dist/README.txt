@@ -16,10 +16,16 @@ Galmar Stone-Fist or Legate Rikke is waiting to put you to the test, exactly as 
 Nothing is skipped ahead. The mod starts the recruitment quest at its own opening stage, so the oath,
 the officer's test and everything after it happen in game as they always do.
 
-The uniform follows what you have installed. The Stormcloak recruit wears the Windhelm heavy set - armour,
-boots, gauntlets, helmet and shield, with a Nord war axe - from Civil War Guard Armor Replacer when it is
-loaded, otherwise from Sons of Skyrim, otherwise the game's own Stormcloak gear. The Imperial recruit wears
-the Legion set, which Civil War Guard Armor Replacer reskins with New Legion's armour when it is loaded.
+The uniform follows the armour mods you have installed - none of them is required. Which one is used is
+decided by one file you can edit, SKSE\Plugins\CivilWarStarts_Kits.json (see ARMOUR MODS below).
+
+  Stormcloak recruit   the first of these that is loaded:
+                         Civil War Guard Armor Replacer   its Windhelm heavy set, with a Nord war axe
+                         Sons of Skyrim                   its Windhelm heavy set, with a Nord war axe
+                         Guards Armor Replacer            its Eastmarch rebel set, with the Northerner axe
+                         (none)                           the game's own Stormcloak gear
+  Imperial recruit     the Legion set. New Legion, Heavy Legion and Civil War Guard Armor Replacer all replace
+                       the game's own Legion armour, so the start wears whichever of them you have installed.
 
 
 WHAT IS IN THE PACKAGE
@@ -28,6 +34,7 @@ WHAT IS IN THE PACKAGE
   SKSE\Plugins\CivilWarStarts.dll                the mod - the installer puts in the build for your game
   SKSE\Plugins\CivilWarStarts.pdb                debug symbols, so crash logs name this mod
   SKSE\Plugins\CivilWarStarts.ini                the settings, with every one explained
+  SKSE\Plugins\CivilWarStarts_Kits.json         which armour mod each start wears, in the order they are tried
   SKSE\AlternatePerspective\CivilWarStarts.json  the starts, as Alternate Perspective reads them
 
 
@@ -67,6 +74,26 @@ SETTINGS
     uLogLevel              how much detail reaches the log
 
 
+ARMOUR MODS
+-----------
+  CivilWarStarts_Kits.json lists, for each side, the armour sources in the order they are tried. A source
+  is used when its plugin is loaded and every piece it needs is found under the name written in the file.
+  If one is not, the log says why and the next source is tried; the last one is the game's own gear, so a start
+  never hands out nothing. The comment at the top of the file explains the format.
+
+  Supported out of the box:
+    Civil War Guard Armor Replacer    Stormcloak
+    Sons of Skyrim (Nexus 68656)      Stormcloak
+    Guards Armor Replacer (22671)     Stormcloak
+    New Legion (30468)                Imperial - replaces the game's own Legion armour, so no entry is needed
+    Heavy Legion (22877)              Imperial - the same
+  A mod that only replaces the game's own armour, or only retextures it, works without an entry.
+
+  To change the order, move a block up or down. To switch a mod off, delete its block. To add a mod, copy a
+  block and change the plugin file name and the pieces (slot, FormID, name). Mark a piece "optional": true and
+  the uniform goes without it when the mod has none - a mod with no shield works. If the file is missing or has
+  a typo, the log gives the line and column and the lists built into the DLL are used.
+
 IF SOMETHING GOES WRONG
 -----------------------
   The log is at
@@ -84,9 +111,11 @@ IF SOMETHING GOES WRONG
 WHAT CHANGED
 ------------
 Version 1.0.7
-The Stormcloak start takes its uniform from Civil War Guard Armor Replacer when that mod is loaded (its
-Windhelm heavy set), then from Sons of Skyrim, then from the game's own gear. Each piece of the
-replacer's set is checked by name first; if the plugin has changed, the next choice is used instead.
+One file, CivilWarStarts_Kits.json, decides which armour mod each start wears. The Stormcloak start takes its
+uniform from Civil War Guard Armor Replacer, then Sons of Skyrim, then Guards Armor Replacer, then the game's own
+gear; the Imperial start wears the Legion set that New Legion, Heavy Legion or Civil War Guard Armor Replacer
+give the game's own Legion armour. Each piece is checked by name first; if a plugin has changed, the next source
+is used instead. Reorder, remove or add sources by editing the file.
 
 Version 1.0.6
 The log ships at info. For a bug report, set uLogLevel=0 in the INI.

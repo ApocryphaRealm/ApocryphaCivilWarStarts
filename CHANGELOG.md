@@ -1,6 +1,6 @@
 # Alternate Perspective Civil War Starts - changelog
 
-## 1.0.7 - 2026-10-19 - untested
+## 1.0.7 - 2026-10-19 - working
 
 ### Added
 - **Civil War Guard Armor Replacer is a kit source for the Stormcloak start.** The replacer merges Sons of Skyrim, New Legion, Guards Armor Replacer and Imperial Tribune Armor into one plugin, so its Windhelm set has different FormIDs from Sons of Skyrim's and the old check missed it. With the replacer loaded the Stormcloak start now hands out its Windhelm heavy armour, lamellar boots and gauntlets, Windhelm helmet and shield, and Nord heavy war axe; Sons of Skyrim is the second choice and the game's own Stormcloak gear the third. The replacer's pieces are checked by name when the start runs, so a changed plugin falls through to the next choice instead of giving wrong gear. The Imperial start needs no change: the replacer overrides the vanilla Imperial pieces the start already hands out with New Legion's Legion set.

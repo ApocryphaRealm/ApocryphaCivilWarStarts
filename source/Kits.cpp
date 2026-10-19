@@ -277,7 +277,7 @@ namespace kits
 			{
 				const auto& src = side.sources[s];
 				Source source;
-				source.id = src.plugin ? src.plugin : "vanilla";
+				source.id = src.pluginName ? src.pluginName : "vanilla";
 				source.label = src.pluginName ? src.pluginName : "the game's own gear";
 				if (src.plugin) { source.plugins.emplace_back(src.plugin); }
 				for (std::size_t i = 0; i < src.count; ++i)
@@ -570,7 +570,7 @@ namespace kits
 			choice.verdicts.push_back(verdict);
 			if (ok)
 			{
-				if (source.plugins.empty()) { say.Info("kit: no kit mod is installed for the {} start, so it uses the game's own gear ({})", sideKey, source.label); }
+				if (source.plugins.empty()) { say.Info("kit: the {} start uses the game's own gear ({}); a mod that replaces those records shows its look through them", sideKey, source.label); }
 				else { say.Info("kit: {} is installed, so the {} start uses its gear ({}, {} piece(s))", source.label, sideKey, choice.pluginFile, choice.pieces.size()); }
 				return choice;
 			}

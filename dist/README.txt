@@ -20,11 +20,10 @@ The uniform follows the armour mods you have installed - none of them is require
 decided by one file you can edit, SKSE\Plugins\CivilWarStarts_Kits.json (see ARMOUR MODS below).
 
   Stormcloak recruit   the first of these that is loaded:
-                         Civil War Guard Armor Replacer   its Windhelm heavy set, with a Nord war axe
                          Sons of Skyrim                   its Windhelm heavy set, with a Nord war axe
                          Guards Armor Replacer            its Eastmarch rebel set, with the Northerner axe
                          (none)                           the game's own Stormcloak gear
-  Imperial recruit     the Legion set. New Legion, Heavy Legion and Civil War Guard Armor Replacer all replace
+  Imperial recruit     the Legion set. New Legion and Heavy Legion both replace
                        the game's own Legion armour, so the start wears whichever of them you have installed.
 
 
@@ -82,7 +81,6 @@ ARMOUR MODS
   never hands out nothing. The comment at the top of the file explains the format.
 
   Supported out of the box:
-    Civil War Guard Armor Replacer    Stormcloak
     Sons of Skyrim (Nexus 68656)      Stormcloak
     Guards Armor Replacer (22671)     Stormcloak
     New Legion (30468)                Imperial - replaces the game's own Legion armour, so no entry is needed
@@ -112,8 +110,8 @@ WHAT CHANGED
 ------------
 Version 1.0.7
 One file, CivilWarStarts_Kits.json, decides which armour mod each start wears. The Stormcloak start takes its
-uniform from Civil War Guard Armor Replacer, then Sons of Skyrim, then Guards Armor Replacer, then the game's own
-gear; the Imperial start wears the Legion set that New Legion, Heavy Legion or Civil War Guard Armor Replacer
+uniform from Sons of Skyrim, then Guards Armor Replacer, then the game's own
+gear; the Imperial start wears the Legion set that New Legion or Heavy Legion
 give the game's own Legion armour. Each piece is checked by name first; if a plugin has changed, the next source
 is used instead. Reorder, remove or add sources by editing the file.
 

@@ -19,8 +19,8 @@
     "A mod that only REPLACES the game's own armour records needs no block: the game's own FormIDs at the bottom of each side",
     "already show its look. Checked by reading each mod's plugin (2026-10-19):",
     "  New Legion (Nexus 30468, DIS_Heavy_Legion.esp) and Heavy Legion (22877, HeavyLegion.esp) replace all six Imperial pieces",
-    "  used below, so the Imperial start wears their Legion set with no entry. Civil War Guard Armor Replacer does the same with",
-    "  New Legion's armatures. Imperial Armors and Weapons Retexture and other asset-only mods change no record at all."
+    "  used below, so the Imperial start wears their Legion set with no entry.",
+    "  Imperial Armors and Weapons Retexture and other asset-only mods change no record at all."
   ],
   "version": 1,
 
@@ -29,7 +29,7 @@
       "id": "cwgar",
       "label": "Civil War Guard Armor Replacer",
       "plugins": ["Civil War Guard Armor Replacer.esp"],
-      "comment": "Not published yet. Its light plugin merges Sons of Skyrim, New Legion, Guards Armor Replacer and Imperial Tribune Armor, so its Windhelm set has FormIDs of its own.",
+      "comment": "An all-in-one armour plugin whose Windhelm set has FormIDs of its own.",
       "pieces": [
         { "slot": "body",      "form": "0x000804", "name": "Windhelm Heavy Armor" },
         { "slot": "boots",     "form": "0x000819", "name": "Lamellar Heavy Boots" },
@@ -86,7 +86,7 @@
     {
       "id": "vanilla",
       "label": "the game's own Legion gear",
-      "comment": "No plugin: whole FormIDs in Skyrim.esm. New Legion, Heavy Legion and Civil War Guard Armor Replacer replace exactly these six records, so with any of them loaded this IS their Legion set - which is why they have no block of their own.",
+      "comment": "No plugin: whole FormIDs in Skyrim.esm. New Legion and Heavy Legion replace exactly these six records, so with any of them loaded this IS their Legion set - which is why they have no block of their own.",
       "pieces": [
         { "slot": "body",      "form": "0x00136D5", "name": "Imperial Armor" },
         { "slot": "boots",     "form": "0x00136D6", "name": "Imperial Boots" },
